@@ -8,7 +8,7 @@ PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 BUCKET = mit-dai-micahs-misc
 PROFILE = default
 PROJECT_NAME = dengue_prediction
-PYTHON_INTERPRETER = python
+PYTHON_INTERPRETER = python3
 
 ifeq (,$(shell which conda))
 HAS_CONDA=False
