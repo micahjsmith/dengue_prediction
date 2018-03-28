@@ -1,0 +1,30 @@
+problem:
+  name: dengue_prediction
+  problem_type: regression
+  problem_type_details:
+    loss_function: mean_absolute_error
+    error_metric: mean_absolute_error
+    larger_is_better: false
+  data:
+    train: 'data/raw'
+    test: 'data/raw'
+    entities_table_name: dengue_features
+    target_table_name: dengue_labels
+  
+tables:
+  -
+    name: dengue_features
+    path: dengue_features.csv
+    index_col:
+    - city
+    - year
+    - weekofyear
+    header: 0
+  - 
+    name: dengue_labels
+    path: dengue_labels.csv
+    index_col:
+    - city
+    - year
+    - weekofyear
+    header: 0 
