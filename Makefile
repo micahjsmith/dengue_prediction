@@ -41,17 +41,19 @@ lint:
 ## Upload Data to S3
 sync_data_to_s3:
 ifeq (default,$(PROFILE))
-	aws s3 sync data/ s3://$(BUCKET)/data/
+	aws s3 sync data/raw s3://$(BUCKET)/$(PROJECT_NAME)/data/raw
+	aws s3 sync data/external s3://$(BUCKET)/$(PROJECT_NAME)/data/external
 else
-	aws s3 sync data/ s3://$(BUCKET)/data/ --profile $(PROFILE)
+	aws s3 sync data/raw s3://$(BUCKET)/$(PROJECT_NAME)/data/ --profile $(PROFILE)
+	aws s3 sync data/external s3://$(BUCKET)/$(PROJECT_NAME)/data/ --profile $(PROFILE)
 endif
 
 ## Download Data from S3
 sync_data_from_s3:
 ifeq (default,$(PROFILE))
-	aws s3 sync s3://$(BUCKET)/data/ data/
+	aws s3 sync s3://$(BUCKET)/$(PROJECT_NAME)/data/ data/
 else
-	aws s3 sync s3://$(BUCKET)/data/ data/ --profile $(PROFILE)
+	aws s3 sync s3://$(BUCKET)/$(PROJECT_NAME)/data/ data/ --profile $(PROFILE)
 endif
 
 ## Set up python interpreter environment
