@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from dengue_prediction.features.feature import Feature, make_robust
+from dengue_prediction.features.feature import Feature, make_robust_transformer
 from dengue_prediction.util import (FragileTransformer, IdentityTransformer,
                                     asarray2d)
 
@@ -35,7 +35,7 @@ class TestFeature(unittest.TestCase):
 
     def _test_robust_transformer(self, input_types, bad_input_checks, catches):
         fragile_transformer = FragileTransformer(bad_input_checks, catches)
-        robust_transformer = make_robust(
+        robust_transformer = make_robust_transformer(
             FragileTransformer(bad_input_checks, catches))
 
         for input_type in input_types:

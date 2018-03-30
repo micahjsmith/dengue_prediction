@@ -1,4 +1,6 @@
 import logging
+#import textwrap
+import traceback
 
 import funcy
 import numpy as np
@@ -11,43 +13,34 @@ from dengue_prediction.util import asarray2d
 logger = logging.getLogger(__name__)
 
 
-__all__ = ['Feature', 'FeatureValidator']
+__all__ = ['Feature', 'FeatureValidator', 'RobustTransformerPipeline',
+           'make_robust_transformer_pipeline']
 
 
 class RobustTransformerPipeline(TransformerPipeline):
 
     def transform(self, X, *args, **kwargs):
-        _transform = _make_robust_to_tabular_types(super().transform)
+        _transform = make_robust_to_tabular_types(super().transform)
         return _transform(X, *args, **kwargs)
 
 
 def make_robust_transformer_pipeline(*steps):
-    """Construct a TransformerPipeline from the given estimators.
-    """
+    """Construct a RobustTransformerPipeline from the given estimators."""
     return RobustTransformerPipeline(_name_estimators(steps))
 
 
-def _make_approaches(funcs, catch):
-    if funcs:
-        for func in funcs[:-1]:
-            yield func, catch
-        yield funcs[-1], ()
+def make_conversion_approaches():
+    funcs = (funcy.identity, pd.Series, pd.DataFrame, np.asarray, asarray2d)
+    catch = (ValueError, TypeError)
+    for func in funcs[:-1]:
+        yield func, catch
+    yield funcs[-1], ()
 
 
-def _make_conversion_approaches():
-    return _make_approaches(
-        (funcy.identity,
-         pd.DataFrame,
-         np.asarray,
-         asarray2d),
-        (ValueError, TypeError)
-    )
-
-
-def _make_robust_to_tabular_types(func):
+def make_robust_to_tabular_types(func):
     @funcy.wraps(func)
     def wrapped(X, y=None, **kwargs):
-        for convert, catch in _make_conversion_approaches():
+        for convert, catch in make_conversion_approaches():
             try:
                 logger.debug(
                     "Converting using approach '{}'".format(convert.__name__))
@@ -55,15 +48,19 @@ def _make_robust_to_tabular_types(func):
                     return func(convert(X), y=convert(y), **kwargs)
                 else:
                     return func(convert(X), **kwargs)
-            except catch:
-                pass
+            except catch as e:
+                #text_wrapper = textwrap.TextWrapper(initial_indent=' '*8, subsequent_indent=' '*8, replace_whitespace=False, width=999)
+                #formatted_exc = text_wrapper.fill(traceback.format_exc())
+                formatted_exc = traceback.format_exc()
+                logger.debug(
+                    "Application subsequently failed with exception '{}'\n\n{}".format(e.__class__.__name__, formatted_exc))
     return wrapped
 
 
-def make_robust(transformer):
-    transformer.fit = _make_robust_to_tabular_types(transformer.fit)
+def make_robust_transformer(transformer):
+    transformer.fit = make_robust_to_tabular_types(transformer.fit)
     # todo optionally catch all errors of transformer and return []
-    transformer.transform = _make_robust_to_tabular_types(transformer.transform)
+    transformer.transform = make_robust_to_tabular_types(transformer.transform)
     return transformer
 
 
@@ -79,7 +76,7 @@ class Feature:
 
         if funcy.is_seqcont(transformer):
             transformer = make_robust_transformer_pipeline(*transformer)
-        self.transformer = make_robust(transformer)
+        self.transformer = make_robust_transformer(transformer)
 
     def as_sklearn_pandas_tuple(self):
         return (self.input, self.transformer)
