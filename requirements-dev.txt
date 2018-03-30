@@ -1,0 +1,7 @@
+-r requirements-test.txt
+
+autoflake
+autopep8
+coverage
+flake8
+isort

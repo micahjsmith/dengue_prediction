@@ -37,6 +37,13 @@ clean:
 ## Lint using flake8
 lint:
 	flake8 dengue_prediction 
+	isort -c --recursive dengue_prediction
+
+## Fix lint issues using autoflake, autopep8, and isort
+fix-lint:
+	find dengue_prediction -name '*.py' | xargs autoflake --in-place --remove-all-unused-imports --remove-unused-variables
+	autopep8 --in-place --recursive --max-line-length=100 dengue_prediction
+	isort --apply --atomic --recursive dengue_prediction
 
 ## Upload Data to S3
 sync_data_to_s3:
