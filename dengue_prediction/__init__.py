@@ -1,5 +1,4 @@
-import os
-import pathlib 
+import pathlib
 
 _PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 PROJECT_PATHS = {}

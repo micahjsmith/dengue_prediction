@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def build_features():
     X_df, y = load_data()
-    
+
     logger.info('Building features...')
     features = get_features()
     mapper = sklearn_pandas.DataFrameMapper([

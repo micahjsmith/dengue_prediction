@@ -22,14 +22,15 @@ def get_table_config(table_name):
     if len(result) == 1:
         return result[0]
     else:
-        raise ValueError("Multiple configs found for table name '{}'".format(table_name))
-        
-    
+        raise ValueError(
+            "Multiple configs found for table name '{}'".format(table_name))
+
+
 def get_table_abspath(table_name):
     config = load_config()
     table_config = get_table_config(table_name)
     fn = (PROJECT_PATHS['root']
           .joinpath(config['problem']['data']['train'])
           .joinpath(table_config['path'])
-         )
+          )
     return fn

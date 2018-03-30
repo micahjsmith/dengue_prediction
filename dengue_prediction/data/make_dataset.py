@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-import pathlib
 
 from dotenv import find_dotenv, load_dotenv
 import click
@@ -10,13 +9,14 @@ import pandas as pd
 
 import dengue_prediction.config
 
+
 def _load_named_table(table_name):
     table_config = dengue_prediction.config.get_table_config(table_name)
     fn = dengue_prediction.config.get_table_abspath(table_name)
     kwargs = funcy.project(table_config, ['header', 'index_col'])
     with open(fn, 'r') as f:
         return pd.read_csv(f, **kwargs)
-    
+
 
 def load_entities_table():
     config = dengue_prediction.config.load_config()
@@ -26,7 +26,7 @@ def load_entities_table():
 def load_target_table():
     config = dengue_prediction.config.load_config()
     return _load_named_table(config['problem']['data']['target_table_name'])
-    
+
 
 def load_data():
     X = load_entities_table()

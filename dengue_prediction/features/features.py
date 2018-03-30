@@ -1,17 +1,12 @@
-import logging
-
-
-from sklearn.pipeline import make_pipeline
 import sklearn.preprocessing
 
 
 from dengue_prediction.features.feature import Feature
-from dengue_prediction.features.transformers import ValueReplacer
 
 
 def get_features():
     features = []
-    
+
     features.append(
         Feature(
             input='ndvi_ne',
@@ -21,7 +16,7 @@ def get_features():
             ]
         )
     )
-    
+
     features.append(
         Feature(
             input='ndvi_nw',
@@ -31,7 +26,7 @@ def get_features():
             ]
         )
     )
-    
+
     features.append(
         Feature(
             input='ndvi_se',
@@ -41,7 +36,7 @@ def get_features():
             ]
         )
     )
-    
+
     features.append(
         Feature(
             input='ndvi_sw',
@@ -51,5 +46,5 @@ def get_features():
             ]
         )
     )
-    
+
     return features
