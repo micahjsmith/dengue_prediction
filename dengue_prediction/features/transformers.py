@@ -2,17 +2,6 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import FeatureUnion
 
-def get_datetime_index(df):
-    index = df.index
-    if isinstance(index, pd.MultiIndex):
-        for index_level in index.levels:
-            if isinstance(index_level, pd.DatetimeIndex):
-                return index_level
-    elif isinstance(index, pd.DatetimeIndex):
-        return index
-
-    # fallback
-    raise None
 
 class NoFitMixin:
     def fit(self, X, y=None, **fit_kwargs):
