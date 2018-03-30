@@ -1,9 +1,11 @@
 import numpy as np
-import pandas as pd
 import sklearn.preprocessing
 
 from dengue_prediction.features.feature import Feature
-from dengue_prediction.features.transformers import NullFiller, SimpleFunctionTransformer, NullIndicator, SingleLagger, LagImputer
+from dengue_prediction.features.transformers import (LagImputer, NullFiller,
+                                                     NullIndicator,
+                                                     SimpleFunctionTransformer,
+                                                     SingleLagger)
 
 
 def get_features():
@@ -58,7 +60,7 @@ def get_features():
             ]
         )
     )
-    
+
     features.append(
         Feature(
             input='precipitation_amt_mm',
@@ -67,7 +69,7 @@ def get_features():
             ]
         )
     )
-    
+
     features.append(
         Feature(
             input='reanalysis_sat_precip_amt_mm',
@@ -78,6 +80,5 @@ def get_features():
             ]
         )
     )
-
 
     return features
