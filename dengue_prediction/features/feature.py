@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.pipeline import _name_estimators
 from sklearn_pandas.pipeline import TransformerPipeline
 
-from dengue_prediction.util import asarray2d
+from dengue_prediction.util import asarray2d, indent
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +48,7 @@ def make_robust_to_tabular_types(func):
                 else:
                     return func(convert(X), **kwargs)
             except catch as e:
-                #import textwrap
-                #text_wrapper = textwrap.TextWrapper(initial_indent=' '*8, subsequent_indent=' '*8, replace_whitespace=False, width=999)
-                #formatted_exc = text_wrapper.fill(traceback.format_exc())
-                formatted_exc = traceback.format_exc()
+                formatted_exc = indent(traceback.format_exc(), n=8)
                 logger.debug(
                     "Application subsequently failed with exception '{}'\n\n{}".format(e.__class__.__name__, formatted_exc))
     return wrapped
