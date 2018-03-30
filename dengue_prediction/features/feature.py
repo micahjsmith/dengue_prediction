@@ -17,8 +17,7 @@ __all__ = ['Feature', 'FeatureValidator']
 class RobustTransformerPipeline(TransformerPipeline):
 
     def transform(self, X, *args, **kwargs):
-        _transform = _make_robust_to_tabular_types(
-            super().transform, 1)
+        _transform = _make_robust_to_tabular_types(super().transform)
         return _transform(X, *args, **kwargs)
 
 
@@ -35,34 +34,36 @@ def _make_approaches(funcs, catch):
         yield funcs[-1], ()
 
 
-def _make_robust_to_tabular_types(func, n):
+def _make_conversion_approaches():
+    return _make_approaches(
+        (funcy.identity,
+         pd.DataFrame,
+         np.asarray,
+         asarray2d),
+        (ValueError, TypeError)
+    )
+
+
+def _make_robust_to_tabular_types(func):
     @funcy.wraps(func)
-    def wrapped(*args, **kwargs):
-        approaches = _make_approaches(
-            (funcy.identity,
-             pd.DataFrame,
-             np.asarray,
-             asarray2d),
-            (ValueError, TypeError)
-        )
-        nonconverted_args = args[n:]
-        for convert, catch in approaches:
+    def wrapped(X, y=None, **kwargs):
+        for convert, catch in _make_conversion_approaches():
             try:
-                converted_args = [convert(args[j]) for j in range(n)]
-                args_ = funcy.merge(converted_args, nonconverted_args)
                 logger.debug(
                     "Converting using approach '{}'".format(convert.__name__))
-                return func(*args_, **kwargs)
+                if y is not None:
+                    return func(convert(X), y=convert(y), **kwargs)
+                else:
+                    return func(convert(X), **kwargs)
             except catch:
                 pass
     return wrapped
 
 
 def make_robust(transformer):
-    transformer.fit = _make_robust_to_tabular_types(transformer.fit, 2)
+    transformer.fit = _make_robust_to_tabular_types(transformer.fit)
     # todo optionally catch all errors of transformer and return []
-    transformer.transform = _make_robust_to_tabular_types(
-        transformer.transform, 1)
+    transformer.transform = _make_robust_to_tabular_types(transformer.transform)
     return transformer
 
 
