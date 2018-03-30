@@ -12,9 +12,12 @@ with open('HISTORY.md') as history_file:
     history = history_file.read()
 
 requirements = [
-    # TODO: put package requirements here
+    'category_encoders',
+    'funcy',
     'numpy',
     'pandas',
+    'scikit_learn',
+    'sklearn_pandas',
 ]
 
 setup_requirements = [
