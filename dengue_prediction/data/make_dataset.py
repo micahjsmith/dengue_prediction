@@ -2,10 +2,10 @@
 import logging
 import os
 
-from dotenv import find_dotenv, load_dotenv
 import click
 import funcy
 import pandas as pd
+from dotenv import find_dotenv, load_dotenv
 
 import dengue_prediction.config
 

@@ -3,11 +3,9 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from dengue_prediction.features.feature import (Feature,
-                                                make_robust,)
-from dengue_prediction.util import (asarray2d,
-                                    IdentityTransformer,
-                                    FragileTransformer,)
+from dengue_prediction.features.feature import Feature, make_robust
+from dengue_prediction.util import (FragileTransformer, IdentityTransformer,
+                                    asarray2d)
 
 
 class TestFeature(unittest.TestCase):

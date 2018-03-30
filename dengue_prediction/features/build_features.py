@@ -1,12 +1,9 @@
 import logging
 
-
 import sklearn_pandas
-
 
 from dengue_prediction.data.make_dataset import load_data
 from dengue_prediction.features.features import get_features
-
 
 logger = logging.getLogger(__name__)
 

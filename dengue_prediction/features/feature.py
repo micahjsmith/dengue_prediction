@@ -1,15 +1,12 @@
 import logging
 
-
 import funcy
 import numpy as np
 import pandas as pd
 from sklearn.pipeline import _name_estimators
 from sklearn_pandas.pipeline import TransformerPipeline
 
-
 from dengue_prediction.util import asarray2d
-
 
 logger = logging.getLogger(__name__)
 

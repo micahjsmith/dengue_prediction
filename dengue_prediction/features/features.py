@@ -1,6 +1,5 @@
 import sklearn.preprocessing
 
-
 from dengue_prediction.features.feature import Feature
 
 
