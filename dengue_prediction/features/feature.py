@@ -1,5 +1,4 @@
 import logging
-#import textwrap
 import traceback
 
 import funcy
@@ -49,6 +48,7 @@ def make_robust_to_tabular_types(func):
                 else:
                     return func(convert(X), **kwargs)
             except catch as e:
+                #import textwrap
                 #text_wrapper = textwrap.TextWrapper(initial_indent=' '*8, subsequent_indent=' '*8, replace_whitespace=False, width=999)
                 #formatted_exc = text_wrapper.fill(traceback.format_exc())
                 formatted_exc = traceback.format_exc()
