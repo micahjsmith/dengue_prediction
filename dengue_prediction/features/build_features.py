@@ -18,7 +18,7 @@ def build_features():
     ], input_df=True)
     X = mapper.fit_transform(X_df, y)
     logger.info('Building features...DONE')
-    return X
+    return X, mapper
 
 
 if __name__ == '__main__':
