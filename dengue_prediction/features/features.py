@@ -1,9 +1,12 @@
+import category_encoders
 import numpy as np
+import pandas as pd
+import sklearn.decomposition
 import sklearn.preprocessing
 
 from dengue_prediction.features.feature import Feature
-from dengue_prediction.features.transformers import (LagImputer, NullFiller,
-                                                     NullIndicator,
+from dengue_prediction.features.transformers import (LagImputer, NamedFramer,
+                                                     NullFiller, NullIndicator,
                                                      SimpleFunctionTransformer,
                                                      SingleLagger)
 
@@ -111,6 +114,37 @@ def get_features():
                 SingleLagger(1, groupby_kwargs={'level': 'city'}),
                 LagImputer(groupby_kwargs={'level': 'city'}),
                 NullFiller(replacement=0.0),
+            ]
+        )
+    )
+
+    features.append(
+        Feature(
+            input=['reanalysis_sat_precip_amt_mm',
+                   'reanalysis_relative_humidity_percent',
+                   'reanalysis_specific_humidity_g_per_kg',
+                   'reanalysis_precip_amt_kg_per_m2',
+                   'precipitation_amt_mm',
+                   'station_precip_mm',
+                   ],
+            transformer=[
+                LagImputer(groupby_kwargs={'level': 'city'}),
+                sklearn.preprocessing.Imputer(),
+                sklearn.decomposition.PCA(n_components=2),
+            ]
+        )
+    )
+
+    # one-hot encoding of year
+    features.append(
+        Feature(
+            input='week_start_date',
+            transformer=[
+                SimpleFunctionTransformer(
+                    lambda ser: pd.to_datetime(ser).dt.year
+                ),
+                NamedFramer(name='week_start_date'),
+                category_encoders.OneHotEncoder(cols=['week_start_date']),
             ]
         )
     )
