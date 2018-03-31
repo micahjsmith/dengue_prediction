@@ -47,7 +47,7 @@ class FragileTransformer(BaseEstimator, TransformerMixin):
 
         return X
 
-    
+
 def indent(text, n=4):
     _indent = ' '*n
-    return '\n'.join([_indent + line for line in  text.split('\n')])
+    return '\n'.join([_indent + line for line in text.split('\n')])

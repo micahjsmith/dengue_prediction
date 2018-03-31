@@ -18,9 +18,9 @@ __all__ = ['Feature', 'FeatureValidator', 'RobustTransformerPipeline',
 
 class RobustTransformerPipeline(TransformerPipeline):
 
-    def transform(self, X, *args, **kwargs):
+    def transform(self, X, **transform_kwargs):
         _transform = make_robust_to_tabular_types(super().transform)
-        return _transform(X, *args, **kwargs)
+        return _transform(X, **transform_kwargs)
 
 
 def make_robust_transformer_pipeline(*steps):
