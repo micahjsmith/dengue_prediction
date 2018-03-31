@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import FeatureUnion
 
@@ -102,3 +103,22 @@ class NullFiller(BaseEstimator, NoFitMixin, TransformerMixin):
 class NullIndicator(BaseEstimator, NoFitMixin, TransformerMixin):
     def transform(self, X, **tranform_kwargs):
         return np.isnan(X).astype(int)
+
+
+class NamedFramer(BaseEstimator, NoFitMixin, TransformerMixin):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+
+    def transform(self, X, **transform_kwargs):
+        if isinstance(X, pd.Index):
+            return X.to_series().to_frame(name=self.name)
+        elif isinstance(X, pd.Series):
+            return X.to_frame(name=self.name)
+        elif isinstance(X, np.ndarray):
+            if X.ndim == 1:
+                return pd.DataFrame(data=X.reshape(1, -1), columns=[self.name])
+            elif X.ndim == 2 and X.shape[1] == 1:
+                return pd.DataFrame(data=X, columns=[self.name])
+
+        raise TypeError("Couldn't convert object {} to named 1d DataFrame.".format(get_arr_desc(X)))
