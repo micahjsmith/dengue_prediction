@@ -3,6 +3,7 @@ import random
 import funcy
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn_pandas.pipeline import TransformerPipeline
 
 
 def asarray2d(a):
@@ -46,6 +47,24 @@ class FragileTransformer(BaseEstimator, TransformerMixin):
             self._raise()
 
         return X
+
+
+class FragileTransformerPipeline(TransformerPipeline):
+    def __init__(self, nsteps, bad_input_checks, errors, shuffle=True, seed=1):
+        steps = [
+            ('IdentityTransformer{:02d}'.format(i), IdentityTransformer())
+            for i in range(nsteps-1)
+        ]
+        fragile_transformer = FragileTransformer(bad_input_checks, errors)
+        steps.append(
+            (repr(fragile_transformer), fragile_transformer)
+        )
+        if shuffle:
+            rand = random.Random()
+            rand.seed(seed)
+            rand.shuffle(steps)
+
+        super().__init__(steps)
 
 
 def indent(text, n=4):

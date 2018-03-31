@@ -1,12 +1,14 @@
 import unittest
 
+import funcy
 import numpy as np
 import pandas as pd
 import sklearn.preprocessing
 
 from dengue_prediction.features.feature import Feature, make_robust_transformer
-from dengue_prediction.util import (FragileTransformer, IdentityTransformer,
-                                    asarray2d)
+from dengue_prediction.util import (FragileTransformer,
+                                    FragileTransformerPipeline,
+                                    IdentityTransformer, asarray2d)
 
 
 class TestFeature(unittest.TestCase):
@@ -34,8 +36,8 @@ class TestFeature(unittest.TestCase):
     def test_feature_init(self):
         Feature(self.input, self.transformer)
 
-    def _test_robust_transformer(self, input_types, bad_input_checks, catches):
-        fragile_transformer = FragileTransformer(bad_input_checks, catches)
+    def _test_robust_transformer(self, input_types, bad_input_checks, catches, transformer_maker=FragileTransformer):
+        fragile_transformer = transformer_maker(bad_input_checks, catches)
         robust_transformer = make_robust_transformer(
             FragileTransformer(bad_input_checks, catches))
 
@@ -79,7 +81,7 @@ class TestFeature(unittest.TestCase):
         )
         catches = (ValueError, TypeError)
         self._test_robust_transformer(input_types, bad_input_checks, catches)
-        
+
     def test_robust_transformer_sklearn(self):
         Transformers = (
             sklearn.preprocessing.Imputer,
@@ -87,24 +89,44 @@ class TestFeature(unittest.TestCase):
             sklearn.preprocessing.Binarizer,
             sklearn.preprocessing.PolynomialFeatures,
         )
-        input_types = ('ser', 'df', 'arr1d', 'arr2d')
+        # some of these input types are bad for sklearn.
+        input_types = ('ser', 'df', 'arr1d')
         for Transformer in Transformers:
             robust_transformer = make_robust_transformer(Transformer())
             for input_type in input_types:
                 X, y = self.d[input_type]
                 robust_transformer.fit_transform(X, y=y)
 
-    def _test_robust_transformer_pipeline(self):
-        pass
+    def _test_robust_transformer_pipeline(self, input_types, bad_input_checks, catches):
+        FragileTransformerPipeline3 = funcy.partial(FragileTransformerPipeline, 3)
+        return self._test_robust_transformer(input_types, bad_input_checks, catches, transformer_maker=FragileTransformerPipeline3)
 
     def test_robust_transformer_pipeline_ser(self):
-        pass
+        input_types = ('ser',)
+        bad_input_checks = (
+            lambda x: isinstance(x, pd.Series),
+        )
+        catches = (ValueError, TypeError)
+        self._test_robust_transformer_pipeline(input_types, bad_input_checks, catches)
 
     def test_robust_transformer_pipeline_df(self):
-        pass
+        input_types = ('ser', 'df',)
+        bad_input_checks = (
+            lambda x: isinstance(x, pd.Series),
+            lambda x: isinstance(x, pd.DataFrame),
+        )
+        catches = (ValueError, TypeError)
+        self._test_robust_transformer_pipeline(input_types, bad_input_checks, catches)
 
     def test_robust_transformer_pipeline_arr(self):
-        pass
+        input_types = ('ser', 'df', 'arr1d')
+        bad_input_checks = (
+            lambda x: isinstance(x, pd.Series),
+            lambda x: isinstance(x, pd.DataFrame),
+            lambda x: isinstance(x, np.ndarray) and x.ndim == 1,
+        )
+        catches = (ValueError, TypeError)
+        self._test_robust_transformer_pipeline(input_types, bad_input_checks, catches)
 
     def test_feature_as_sklearn_pandas_tuple(self):
         feature = Feature(self.input, self.transformer)
