@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
+import sklearn.preprocessing
 
 from dengue_prediction.features.feature import Feature, make_robust_transformer
 from dengue_prediction.util import (FragileTransformer, IdentityTransformer,
@@ -78,6 +79,20 @@ class TestFeature(unittest.TestCase):
         )
         catches = (ValueError, TypeError)
         self._test_robust_transformer(input_types, bad_input_checks, catches)
+        
+    def test_robust_transformer_sklearn(self):
+        Transformers = (
+            sklearn.preprocessing.Imputer,
+            sklearn.preprocessing.StandardScaler,
+            sklearn.preprocessing.Binarizer,
+            sklearn.preprocessing.PolynomialFeatures,
+        )
+        input_types = ('ser', 'df', 'arr1d', 'arr2d')
+        for Transformer in Transformers:
+            robust_transformer = make_robust_transformer(Transformer())
+            for input_type in input_types:
+                X, y = self.d[input_type]
+                robust_transformer.fit_transform(X, y=y)
 
     def _test_robust_transformer_pipeline(self):
         pass
