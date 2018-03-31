@@ -1,22 +1,23 @@
 from collections import MutableSequence
-import featurehub.modeling.model
+
+from dengue_prediction.models import constants
 
 
-class Metric(object):
+class Metric:
     """Metric"""
 
     def __init__(self, name, scoring, value):
-        self.name    = name
+        self.name = name
         self.scoring = scoring
-        self.value   = value
+        self.value = value
 
     def __eq__(self, other):
         if not isinstance(other, Metric):
             return False
 
         return self.name == other.name \
-                and self.scoring == other.scoring \
-                and self.value == other.value
+            and self.scoring == other.scoring \
+            and self.value == other.value
 
     def __str__(self):
         return "<{} object with fields {}>".format(type(self), self.__dict__)
@@ -50,15 +51,15 @@ class Metric(object):
         except Exception:
             value = None
 
-        if kind=="user":
+        if kind == "user":
             d = {
-                self.name : value,
+                self.name: value,
             }
-        elif kind=="db":
+        elif kind == "db":
             d = {
-                "name"    : self.name,
-                "scoring" : self.scoring,
-                "value"   : value,
+                "name": self.name,
+                "scoring": self.scoring,
+                "value": value,
             }
         else:
             raise ValueError("Bad kind: {} ".format(kind))
@@ -67,7 +68,7 @@ class Metric(object):
 
     def to_string(self, kind="user"):
         """Convert to user/db format, then return string representation."""
-        if kind=="user":
+        if kind == "user":
             return "{}: {}".format(self.name, self.value)
         else:
             raise NotImplementedError
@@ -75,14 +76,14 @@ class Metric(object):
     @classmethod
     def from_dict(cls, d, kind="user"):
         """Instantiate Metric from user/db format."""
-        if kind=="user":
+        if kind == "user":
             assert len(d) == 1
             keys = [k for k in d.keys()]
-            name    = keys[0]
+            name = keys[0]
             scoring = Metric.name_to_scoring(name)
-            value   = d[name]
+            value = d[name]
             return cls(name, scoring, value)
-        elif kind=="db":
+        elif kind == "db":
             return cls(**d)
         else:
             raise ValueError("Bad kind: {} ".format(kind))
@@ -96,14 +97,15 @@ class Metric(object):
                     return d["scoring"]
             return None
 
-        result = find_in_list(featurehub.modeling.model.Model.CLASSIFICATION_SCORING)
+        result = find_in_list(constants.CLASSIFICATION_SCORING)
         if result is not None:
             return result
-        result = find_in_list(featurehub.modeling.model.Model.REGRESSION_SCORING)
+        result = find_in_list(constants.REGRESSION_SCORING)
         if result is not None:
             return result
 
         return None
+
 
 class MetricList(MutableSequence):
     """MetricList"""
@@ -141,7 +143,7 @@ class MetricList(MutableSequence):
         # the MetricList to a dictionary for returning to the user, the keys
         # are not in any sorted order.
         # TODO The interface of this collection should be a set.
-        for x,y in zip(sorted(self._list), sorted(other._list)):
+        for x, y in zip(sorted(self._list), sorted(other._list)):
             if x != y:
                 return False
 
@@ -160,7 +162,8 @@ class MetricList(MutableSequence):
         line_suffix = "\n"
         if self._list:
             for metric in self._list:
-                metrics_str += line_prefix + metric.to_string(kind=kind) + line_suffix
+                metrics_str += line_prefix + \
+                    metric.to_string(kind=kind) + line_suffix
         else:
             metrics_str += line_prefix + "<no metrics returned>" + line_suffix
 
@@ -180,11 +183,11 @@ class MetricList(MutableSequence):
         kind : str
             One of "user" or "db"
         """
-        if kind=="user":
+        if kind == "user":
             metrics = {}
             for m in self._list:
                 metrics.update(m.convert(kind="user"))
-        elif kind=="db":
+        elif kind == "db":
             metrics = []
             for m in self._list:
                 metrics.append(m.convert(kind="db"))
@@ -197,7 +200,7 @@ class MetricList(MutableSequence):
     def from_dict_user(cls, d):
         metrics = cls()
         for key in d:
-            metrics.append(Metric.from_dict({key:d[key]},kind="user"))
+            metrics.append(Metric.from_dict({key: d[key]}, kind="user"))
 
         return metrics
 
@@ -205,7 +208,7 @@ class MetricList(MutableSequence):
     def from_list_db(cls, l):
         metrics = cls()
         for item in l:
-            metrics.append(Metric.from_dict(item,kind="db"))
+            metrics.append(Metric.from_dict(item, kind="db"))
 
         return metrics
 

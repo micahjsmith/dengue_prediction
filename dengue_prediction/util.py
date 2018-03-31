@@ -7,6 +7,8 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn_pandas.pipeline import TransformerPipeline
 
+RANDOM_STATE = 1754
+
 
 def asarray2d(a):
     arr = np.asarray(a)
