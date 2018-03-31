@@ -50,7 +50,8 @@ def make_robust_to_tabular_types(func):
             except catch as e:
                 formatted_exc = indent(traceback.format_exc(), n=8)
                 logger.debug(
-                    "Application subsequently failed with exception '{}'\n\n{}".format(e.__class__.__name__, formatted_exc))
+                    "Application subsequently failed with exception '{}'\n\n{}"
+                    .format(e.__class__.__name__, formatted_exc))
     return wrapped
 
 

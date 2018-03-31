@@ -55,7 +55,7 @@ class FragileTransformerPipeline(TransformerPipeline):
     def __init__(self, nsteps, bad_input_checks, errors, shuffle=True, seed=1):
         steps = [
             ('IdentityTransformer{:02d}'.format(i), IdentityTransformer())
-            for i in range(nsteps-1)
+            for i in range(nsteps - 1)
         ]
         fragile_transformer = FragileTransformer(bad_input_checks, errors)
         steps.append(
@@ -100,13 +100,15 @@ class InputLogger(BaseEstimator, TransformerMixin):
         if self.name:
             name = self.name
         else:
-            name = (inspect.getfile(inspect.currentframe()).split("\\", -1)[-1]).rsplit(".", 1)[0]
+            name = (inspect.getfile(inspect.currentframe()).split(
+                "\\", -1)[-1]).rsplit(".", 1)[0]
         return logging.getLogger(name).log(self.level, msg)
 
     def fit(self, X, y=None, **fit_kwargs):
         X_desc = get_arr_desc(X)
         y_desc = get_arr_desc(y)
-        self._log('Fit called with X={X_desc}, y={y_desc}'.format(X_desc=X_desc, y_desc=y_desc))
+        self._log('Fit called with X={X_desc}, y={y_desc}'.format(
+            X_desc=X_desc, y_desc=y_desc))
         return self
 
     def transform(self, X, **transform_kwargs):
@@ -116,7 +118,7 @@ class InputLogger(BaseEstimator, TransformerMixin):
 
 
 def indent(text, n=4):
-    _indent = ' '*n
+    _indent = ' ' * n
     return '\n'.join([_indent + line for line in text.split('\n')])
 
 
@@ -124,7 +126,8 @@ class LoggingContext(object):
     '''
     Logging context manager
 
-    Source: <https://docs.python.org/3/howto/logging-cookbook.html#using-a-context-manager-for-selective-logging>
+    Source: <https://docs.python.org/3/howto/logging-cookbook.html
+             #using-a-context-manager-for-selective-logging>
     '''
 
     def __init__(self, logger, level=None, handler=None, close=True):

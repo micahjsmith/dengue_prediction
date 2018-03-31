@@ -36,7 +36,12 @@ class TestFeature(unittest.TestCase):
     def test_feature_init(self):
         Feature(self.input, self.transformer)
 
-    def _test_robust_transformer(self, input_types, bad_input_checks, catches, transformer_maker=FragileTransformer):
+    def _test_robust_transformer(
+            self,
+            input_types,
+            bad_input_checks,
+            catches,
+            transformer_maker=FragileTransformer):
         fragile_transformer = transformer_maker(bad_input_checks, catches)
         robust_transformer = make_robust_transformer(
             FragileTransformer(bad_input_checks, catches))
@@ -97,9 +102,15 @@ class TestFeature(unittest.TestCase):
                 X, y = self.d[input_type]
                 robust_transformer.fit_transform(X, y=y)
 
-    def _test_robust_transformer_pipeline(self, input_types, bad_input_checks, catches):
-        FragileTransformerPipeline3 = funcy.partial(FragileTransformerPipeline, 3)
-        return self._test_robust_transformer(input_types, bad_input_checks, catches, transformer_maker=FragileTransformerPipeline3)
+    def _test_robust_transformer_pipeline(
+            self, input_types, bad_input_checks, catches):
+        FragileTransformerPipeline3 = funcy.partial(
+            FragileTransformerPipeline, 3)
+        return self._test_robust_transformer(
+            input_types,
+            bad_input_checks,
+            catches,
+            transformer_maker=FragileTransformerPipeline3)
 
     def test_robust_transformer_pipeline_ser(self):
         input_types = ('ser',)
@@ -107,7 +118,8 @@ class TestFeature(unittest.TestCase):
             lambda x: isinstance(x, pd.Series),
         )
         catches = (ValueError, TypeError)
-        self._test_robust_transformer_pipeline(input_types, bad_input_checks, catches)
+        self._test_robust_transformer_pipeline(
+            input_types, bad_input_checks, catches)
 
     def test_robust_transformer_pipeline_df(self):
         input_types = ('ser', 'df',)
@@ -116,7 +128,8 @@ class TestFeature(unittest.TestCase):
             lambda x: isinstance(x, pd.DataFrame),
         )
         catches = (ValueError, TypeError)
-        self._test_robust_transformer_pipeline(input_types, bad_input_checks, catches)
+        self._test_robust_transformer_pipeline(
+            input_types, bad_input_checks, catches)
 
     def test_robust_transformer_pipeline_arr(self):
         input_types = ('ser', 'df', 'arr1d')
@@ -126,7 +139,8 @@ class TestFeature(unittest.TestCase):
             lambda x: isinstance(x, np.ndarray) and x.ndim == 1,
         )
         catches = (ValueError, TypeError)
-        self._test_robust_transformer_pipeline(input_types, bad_input_checks, catches)
+        self._test_robust_transformer_pipeline(
+            input_types, bad_input_checks, catches)
 
     def test_feature_as_sklearn_pandas_tuple(self):
         feature = Feature(self.input, self.transformer)

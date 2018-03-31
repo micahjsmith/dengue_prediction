@@ -3,6 +3,8 @@ import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import FeatureUnion
 
+from dengue_predicition.util import get_arr_desc
+
 
 class NoFitMixin:
     def fit(self, X, y=None, **fit_kwargs):
@@ -19,22 +21,25 @@ class SimpleFunctionTransformer(BaseEstimator, NoFitMixin, TransformerMixin):
 
 
 class GroupedFunctionTransformer(BaseEstimator, NoFitMixin, TransformerMixin):
-    def __init__(self, func, groupby_kwargs=None, func_args=None, func_kwargs=None):
+    def __init__(self, func, groupby_kwargs=None, func_args=None,
+                 func_kwargs=None):
         super().__init__()
         self.func = func
-        self.func_args = func_args if func_args else {}
+        self.func_args = func_args if func_args else ()
         self.func_kwargs = func_kwargs if func_kwargs else {}
         self.groupby_kwargs = groupby_kwargs if groupby_kwargs else {}
 
     def transform(self, X, **transform_kwargs):
         if self.groupby_kwargs:
-            grouped = X.sort_index().groupby(**self.groupby_kwargs)
-            return grouped.apply(self.func, *self.func_args, **self.func_kwargs)
+            call = X.sort_index().groupby(**self.groupby_kwargs).apply
         else:
-            return X.sort_index().pipe(self.func, *self.func_args, **self.func_kwargs)
+            call = X.sort_index().pipe
+        return call(self.func, *self.func_args, **self.func_kwargs)
 
 
 class DelegatingTransformerMixin(TransformerMixin):
+    # TODO remove? almost certainly this can be accomplished with inheritance
+    # directly
     def fit(self, X, y=None, **fit_args):
         return self._transformer.fit(X, y=None, **fit_args)
 
@@ -42,15 +47,9 @@ class DelegatingTransformerMixin(TransformerMixin):
         return self._transformer.transform(X, **transform_args)
 
 
-class SingleLagger(BaseEstimator, DelegatingTransformerMixin):
+class SingleLagger(GroupedFunctionTransformer):
     def __init__(self, lag, groupby_kwargs=None):
-        super().__init__()
-        self._transformer = GroupedFunctionTransformer(
-            lambda df, *args, **kwargs: df.shift(*args, **kwargs),
-            groupby_kwargs=groupby_kwargs,
-            func_args=(lag,),
-            func_kwargs=None,
-        )
+        super().__init__(lambda x: x.shift(lag), groupby_kwargs=groupby_kwargs)
 
 
 def make_multi_lagger(lags, groupby_kwargs=None):
@@ -61,15 +60,10 @@ def make_multi_lagger(lags, groupby_kwargs=None):
     return feature_union
 
 
-class LagImputer(BaseEstimator, DelegatingTransformerMixin, TransformerMixin):
+class LagImputer(GroupedFunctionTransformer):
     def __init__(self, groupby_kwargs=None):
-        super().__init__()
-        self._transformer = GroupedFunctionTransformer(
-            lambda df, *args, **kwargs: df.fillna(*args, **kwargs),
-            groupby_kwargs=groupby_kwargs,
-            func_args=(),
-            func_kwargs={'method': 'ffill'},
-        )
+        super().__init__(lambda x: x.fillna(method='ffill'),
+                         groupby_kwargs=groupby_kwargs)
 
 
 class ValueReplacer(BaseEstimator, NoFitMixin, TransformerMixin):
@@ -121,4 +115,6 @@ class NamedFramer(BaseEstimator, NoFitMixin, TransformerMixin):
             elif X.ndim == 2 and X.shape[1] == 1:
                 return pd.DataFrame(data=X, columns=[self.name])
 
-        raise TypeError("Couldn't convert object {} to named 1d DataFrame.".format(get_arr_desc(X)))
+        raise TypeError(
+            "Couldn't convert object {} to named 1d DataFrame.".format(
+                get_arr_desc(X)))
