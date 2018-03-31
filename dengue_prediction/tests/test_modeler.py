@@ -50,13 +50,13 @@ class TestModeler(unittest.TestCase):
         metrics_user = metrics.convert(kind="user")
 
         self.assertAlmostEqual(
-            metrics_user['Accuracy'], 0.9468954, delta=EPSILON)
+            metrics_user['Accuracy'], 0.9403594, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['Precision'], 0.9468954, delta=EPSILON)
+            metrics_user['Precision'], 0.9403594, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['Recall'], 0.9468954, delta=EPSILON)
+            metrics_user['Recall'], 0.9403594, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['ROC AUC'], 0.9601715, delta=EPSILON)
+            metrics_user['ROC AUC'], 0.9552696, delta=EPSILON)
 
     def test_classification_train_test(self):
         metrics = self._test_problem_type_train_test(
