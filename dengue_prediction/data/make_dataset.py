@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import logging
 import os
 
@@ -10,12 +9,10 @@ from dotenv import find_dotenv, load_dotenv
 import dengue_prediction.config
 
 
-def _load_named_table(table_name):
-    table_config = dengue_prediction.config.get_table_config(table_name)
-    fn = dengue_prediction.config.get_table_abspath(table_name)
-    kwargs = funcy.project(table_config, ['header', 'index_col'])
-    with open(fn, 'r') as f:
-        return pd.read_csv(f, **kwargs)
+def load_data():
+    X = load_entities_table()
+    y = load_target_table()
+    return X, y
 
 
 def load_entities_table():
@@ -28,10 +25,12 @@ def load_target_table():
     return _load_named_table(config['problem']['data']['target_table_name'])
 
 
-def load_data():
-    X = load_entities_table()
-    y = load_target_table()
-    return X, y
+def _load_named_table(table_name):
+    table_config = dengue_prediction.config.get_table_config(table_name)
+    fn = dengue_prediction.config.get_table_abspath(table_name)
+    kwargs = table_config['pd_read_kwargs']
+    with open(fn, 'r') as f:
+        return pd.read_csv(f, **kwargs)
 
 
 @click.command()
@@ -48,9 +47,6 @@ def main(input_filepath, output_filepath):
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-
-    # not used in this stub but often useful for finding various files
-    project_dir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
 
     # find .env automagically by walking up directories until it's found, then
     # load up the .env entries as environment variables

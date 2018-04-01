@@ -7,24 +7,26 @@ problem:
     larger_is_better: false
   data:
     train: 'data/raw'
-    test: 'data/raw'
+    test: 'data/raw/test'
     entities_table_name: dengue_features
     target_table_name: dengue_labels
-  
+
 tables:
   -
     name: dengue_features
     path: dengue_features.csv
-    index_col:
-    - city
-    - year
-    - weekofyear
-    header: 0
-  - 
+    pd_read_kwargs:
+      index_col:
+      - city
+      - year
+      - weekofyear
+      header: 0
+  -
     name: dengue_labels
     path: dengue_labels.csv
-    index_col:
-    - city
-    - year
-    - weekofyear
-    header: 0 
+    pd_read_kwargs:
+      index_col:
+      - city
+      - year
+      - weekofyear
+      header: 0

@@ -7,11 +7,9 @@ import funcy
 import numpy as np
 import pandas as pd
 import sklearn.metrics
-from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
-from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import KFold, StratifiedKFold
-from sklearn.preprocessing import LabelEncoder, label_binarize
+from sklearn.preprocessing import label_binarize
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from dengue_prediction.config import load_config
@@ -19,6 +17,8 @@ from dengue_prediction.constants import ProblemType
 from dengue_prediction.models import constants
 from dengue_prediction.models.constants import (
     ClassificationMetricAgg, MetricComputationApproach)
+from dengue_prediction.models.input_type_transforms import (
+    FeatureTypeTransformer, TargetTypeTransformer)
 from dengue_prediction.models.metrics import Metric, MetricList
 from dengue_prediction.util import RANDOM_STATE, str_to_enum_member
 
@@ -28,7 +28,7 @@ def create_model():
     config = load_config()
     problem_type_str = funcy.get_in(config, ['problem', 'problem_type'])
     problem_type = str_to_enum_member(problem_type_str, ProblemType)
-    if problem_type:
+    if problem_type is not None:
         return Modeler(problem_type)
     else:
         # TODO
@@ -54,27 +54,7 @@ class Modeler:
     def set_estimator(self, estimator):
         self.estimator = estimator
 
-    def fit(self, X, y, **fit_kwargs):
-        X = self.feature_type_transformer.fit_transform(X)
-        y = self.target_type_transformer.fit_transform(y)
-        self.estimator.fit(X, y, **fit_kwargs)
-        return self
-
-    # def predict(self, X, **predict_kwargs):
-    #    # TODO scary, figure out the lifecycle of a FeatureTypeTransformer
-    #    X = self.feature_type_transformer.fit_transform(X)
-    #    return self.model.predict(X, **predict_kwargs))
-
-    def compute_metrics(
-            self, X, y, kind=MetricComputationApproach.CV, **kwargs):
-        if kind == MetricComputationApproach.CV:
-            return self.compute_metrics_cv(X, y, **kwargs)
-        elif kind == MetricComputationApproach.TRAIN_TEST:
-            return self.compute_metrics_train_test(X, y, **kwargs)
-        else:
-            raise NotImplementedError("Bad metrics kind: {}".format(kind))
-
-    def compute_metrics_cv(self, X, y):
+    def compute_metrics_cv(self, X, y, **kwargs):
         """Compute cross-validated metrics.
         Trains this model on data X with labels y.
         Returns a MetricList with the name, scoring type, and value for each
@@ -241,9 +221,6 @@ class Modeler:
             return model.predict_proba(X_te)
 
         # transformers
-        def noop(y_true):
-            return y_true
-
         def transformer_binarize(y_true):
             return label_binarize(y_true, classes=classes)
 
@@ -253,19 +230,19 @@ class Modeler:
         params = {
             "accuracy": {
                 "predictor": predict,
-                "pred_transformer": noop,
+                "pred_transformer": funcy.identity,
                 "scorer": sklearn.metrics.accuracy_score,
             },
             "precision": {
                 "predictor": predict,
-                "pred_transformer": noop,
+                "pred_transformer": funcy.identity,
                 "scorer": lambda y_true, y_pred:
                     sklearn.metrics.precision_score(y_true, y_pred,
                                                     average=metric_aggregation)
             },
             "recall": {
                 "predictor": predict,
-                "pred_transformer": noop,
+                "pred_transformer": funcy.identity,
                 "scorer": lambda y_true, y_pred:
                     sklearn.metrics.recall_score(y_true, y_pred,
                                                  average=metric_aggregation),
@@ -273,21 +250,21 @@ class Modeler:
             "roc_auc": {
                 "predictor": predict if is_binary else predict_prob,
                 "pred_transformer":
-                    noop if is_binary else transformer_binarize,
+                    funcy.identity if is_binary else transformer_binarize,
                 "scorer": lambda y_true, y_pred:
                     sklearn.metrics.roc_auc_score(y_true, y_pred,
                                                   average=metric_aggregation),
             },
             "root_mean_squared_error": {
                 "predictor": predict,
-                "pred_transformer": noop,
+                "pred_transformer": funcy.identity,
                 "scorer": lambda y_true, y_pred:
                     np.sqrt(sklearn.metrics.mean_squared_error(y_true,
                                                                y_pred)),
             },
             "r2": {
                 "predictor": predict,
-                "pred_transformer": noop,
+                "pred_transformer": funcy.identity,
                 "scorer": sklearn.metrics.r2_score
             },
         }
@@ -322,8 +299,8 @@ class Modeler:
         return scorings, scorings_
 
     def _format_inputs(self, X, y):
-        X = self.feature_type_transformer.transform(X)
-        y = self.target_type_transformer.transform(y)
+        X = self.feature_type_transformer.fit_transform(X)
+        y = self.target_type_transformer.fit_transform(y)
         return X, y
 
     def _get_default_estimator(self):
@@ -348,109 +325,3 @@ class DecisionTreeModeler(Modeler):
 
     def _get_default_regressor(self):
         return DecisionTreeRegressor(random_state=RANDOM_STATE + 2)
-
-
-
-class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
-    BAD_TYPE_MSG = "Unsupported input type '{}'"
-    BAD_SHAPE_MSG = "Unsupported input shape '{}'"
-
-    @staticmethod
-    def _get_original_info(X):
-        if isinstance(X, pd.Series):
-            return {
-                'index': X.index,
-                'dtype': X.dtype,
-                'name': X.name,
-            }
-        elif isinstance(X, pd.DataFrame):
-            return {
-                'index': X.index,
-                'dtypes': X.dtypes,
-                'columns': X.columns,
-            }
-        elif isinstance(X, np.ndarray):
-            return {'ndim': X.ndim}
-        else:
-            return {}
-
-    def fit(self, X, **fit_kwargs):
-        self.original_type_ = type(X)
-        self.original_info_ = self._get_original_info(X)
-        return self
-
-    def transform(self, X, **transform_kwargs):
-        if isinstance(X, pd.Series):
-            return X.values
-            # return X.to_frame().to_records(index=False))
-        elif isinstance(X, pd.DataFrame):
-            return X.values
-            # return np.asarray(X.to_records(index=False))
-        elif isinstance(X, np.ndarray):
-            if X.ndim == 1:
-                return X.reshape(-1, 1)
-            elif X.ndim == 2:
-                return X
-            elif X.ndim >= 3:
-                raise TypeError(
-                    FeatureTypeTransformer.BAD_SHAPE_MSG.format(
-                        X.shape))
-        else:
-            # should be unreachable
-            raise TypeError(
-                FeatureTypeTransformer.BAD_TYPE_MSG.format(
-                    type(X)))
-
-    def inverse_transform(self, X, **inverse_transform_kwargs):
-        if hasattr(self, 'original_type_') and hasattr(self, 'original_info_'):
-            if issubclass(self.original_type_, pd.Series):
-                data = X
-                index = self.original_info_['index']
-                name = self.original_info_['name']
-                dtype = self.original_info_['dtype']
-                return pd.Series(data=data, index=index,
-                                 name=name, dtype=dtype)
-            elif issubclass(self.original_type_, pd.DataFrame):
-                data = X
-                index = self.original_info_['index']
-                columns = self.original_info_['columns']
-                dtypes = self.original_info_['dtypes']
-                return pd.DataFrame(data=data, index=index,
-                                    columns=columns, dtypes=dtypes)
-            elif issubclass(self.orginal_type_, np.ndarray):
-                # only thing we might have done is change dimensions for 1d/2d
-                if self.original_info_['ndim'] == 1:
-                    return X.ravel()
-                elif self.original_info_['ndim'] == 2:
-                    return X
-            # should be unreachable
-            raise RuntimeError
-        else:
-            raise NotFittedError
-
-
-class TargetTypeTransformer(FeatureTypeTransformer):
-    def __init__(self, needs_label_encoder=False):
-        super().__init__()
-        self.needs_label_encoder = needs_label_encoder
-
-    def fit(self, y, **fit_kwargs):
-        super().fit(y, **fit_kwargs)
-        if self.needs_label_encoder:
-            self.label_encoder_ = LabelEncoder()
-            self.label_encoder_.fit(y)
-        return self
-
-    def transform(self, y, **transform_kwargs):
-        y = super().transform(y)
-        if self.needs_label_encoder:
-            y = self.label_encoder_.transform(y)
-        y = y.ravel()
-        return y
-
-    def inverse_transform(self, y, **inverse_transform_kwargs):
-        # TODO do we require inverse of ravel?
-        if self.needs_label_encoder:
-            y = self.label_encoder_.inverse_transform(y)
-        y = super().inverse_transform(y)
-        return y

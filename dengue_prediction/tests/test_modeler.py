@@ -107,7 +107,7 @@ class TestModeler(unittest.TestCase):
         model = DecisionTreeModeler(problem_type)
         X = data[problem_type]["X"]
         y = data[problem_type]["y"]
-        metrics = model.compute_metrics(X, y)
+        metrics = model.compute_metrics_cv(X, y)
 
         return metrics
 
@@ -116,7 +116,6 @@ class TestModeler(unittest.TestCase):
         X = data[problem_type]["X"]
         y = data[problem_type]["y"]
         n = round(0.7 * len(X))
-        metrics = model.compute_metrics(
-            X, y, kind=MetricComputationApproach.TRAIN_TEST, n=n)
+        metrics = model.compute_metrics_train_test(X, y, n=n)
 
         return metrics
