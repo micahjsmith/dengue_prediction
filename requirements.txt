@@ -2,3 +2,9 @@ click
 Sphinx
 awscli
 python-dotenv>=0.5.1
+category_encoders
+funcy
+numpy
+pandas
+scikit_learn
+sklearn_pandas
