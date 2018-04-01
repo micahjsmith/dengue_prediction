@@ -149,3 +149,14 @@ def get_feature_transformations():
     )
 
     return features
+
+
+def get_target_transformations():
+    transformations = []
+    transformations.append(
+        Feature(
+            input='total_cases',
+            transformer=IdentityTransformer(),
+        )
+    )
+    return transformations

@@ -3,7 +3,8 @@ import logging
 import sklearn_pandas
 
 from dengue_prediction.data.make_dataset import load_data
-from dengue_prediction.features.features import get_features
+from dengue_prediction.features.features import (
+    get_feature_transformations, get_target_transformations)
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,17 @@ def build_features(X_df, y_df):
     X = mapper.fit_transform(X_df, y_df)
     logger.info('Building features...DONE')
     return X, mapper
+
+
+def build_target(y_df):
+    logger.info('Building target...')
+    target_transformations = get_target_transformations()
+    mapper = sklearn_pandas.DataFrameMapper([
+        t.as_sklearn_pandas_tuple() for t in target_transformations
+    ])
+    y = mapper.fit_transform(y_df)
+    logger.info('Building features...DONE')
+    return y, mapper
 
 
 if __name__ == '__main__':
