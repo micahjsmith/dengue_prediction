@@ -1,11 +1,6 @@
 from enum import Enum
 
 
-class ProblemType(Enum):
-    CLASSIFICATION = 1
-    REGRESSION = 2
-
-
 class ClassificationMetricAgg(Enum):
     BINARY_METRIC_AGGREGATION = "micro"
     MULTICLASS_METRIC_AGGREGATION = "micro"

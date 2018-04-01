@@ -13,9 +13,10 @@ from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from dengue_prediction.config import load_config
+from dengue_prediction.constants import ProblemType
 from dengue_prediction.models import constants
 from dengue_prediction.models.constants import (
-    ClassificationMetricAgg, MetricComputationApproach, ProblemType)
+    ClassificationMetricAgg, MetricComputationApproach)
 from dengue_prediction.models.metrics import Metric, MetricList
 from dengue_prediction.util import RANDOM_STATE
 
