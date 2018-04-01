@@ -1,3 +1,5 @@
+[![][travis-img]][travis-url]
+
 dengue_prediction
 ==============================
 
@@ -54,3 +56,6 @@ Project Organization
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
+
+[travis-img]: https://travis-ci.org/micahjsmith/dengue_prediction.svg?branch=master
+[travis-url]: https://travis-ci.org/micahjsmith/dengue_prediction
