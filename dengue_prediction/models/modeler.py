@@ -1,3 +1,4 @@
+import logging
 import sys
 import traceback
 from collections import defaultdict
@@ -21,6 +22,7 @@ from dengue_prediction.models.constants import (
 from dengue_prediction.models.metrics import Metric, MetricList
 from dengue_prediction.util import RANDOM_STATE, str_to_enum_member
 
+logger = logging.getLogger(__name__)
 
 def create_model():
     config = load_config()
@@ -40,8 +42,7 @@ class Modeler:
     performance metrics.
     Parameters
     ----------
-    problem_type : str
-        One of "classification" or "regression"
+    problem_type : ProblemType
     """
 
     def __init__(self, problem_type):
@@ -71,7 +72,7 @@ class Modeler:
         elif kind == MetricComputationApproach.TRAIN_TEST:
             return self.compute_metrics_train_test(X, y, **kwargs)
         else:
-            raise ValueError("Bad metrics kind: {}".format(kind))
+            raise NotImplementedError("Bad metrics kind: {}".format(kind))
 
     def compute_metrics_cv(self, X, y):
         """Compute cross-validated metrics.
@@ -96,42 +97,47 @@ class Modeler:
         metric_list = self.scores_to_metriclist(scorings, scores)
         return metric_list
 
+    def _compute_metrics_train_test_fitted(self, X, y, classes=None):
+        scorings, scorings_ = self._get_scorings()
+
+        # Determine binary/multiclass classification
+        if classes is None:
+            classes = np.unique(y)
+        params = self._get_params(classes)
+
+        scores = {}
+        for scoring in scorings_:
+            scores[scoring] = self._do_scoring(scoring, params, self.estimator,
+                                               X, y)
+
+        metric_list = self.scores_to_metriclist(scorings, scores)
+        return metric_list
+
     def compute_metrics_train_test(self, X, y, n):
         """Compute metrics on test set.
         """
 
         X, y = self._format_inputs(X, y)
 
-        X_train, y_train = X[:n], y[:n]
-        X_test, y_test = X[n:], y[n:]
-
-        scorings, scorings_ = self._get_scorings()
-
-        # Determine binary/multiclass classification
-        classes = np.unique(y)
-        params = self._get_params(classes)
+        X_tr, y_tr = X[:n], y[:n]
+        X_te, y_te = X[n:], y[n:]
 
         # fit model on entire training set
-        self.estimator.fit(X_train, y_train)
+        self.estimator.fit(X_tr, y_tr)
 
-        scores = {}
-        for scoring in scorings_:
-            scores[scoring] = self._do_scoring(scoring, params, self.estimator,
-                                               X_test, y_test)
+        return self._compute_metrics_train_test_fitted(
+            X_te, y_te, classes=np.unique(y))
 
-        metric_list = self.scores_to_metriclist(scorings, scores)
-        return metric_list
-
-    def _do_scoring(self, scoring, params, model, X_test, y_test,
+    def _do_scoring(self, scoring, params, model, X_te, y_te,
                     failure_value=None):
         # Make and evaluate predictions. Note that ROC AUC may raise
         # exception if somehow we only have examples from one class in
         # a given fold.
-        y_test_transformed = params[scoring]["pred_transformer"](y_test)
-        y_test_pred = params[scoring]["predictor"](model, X_test)
+        y_te_transformed = params[scoring]["pred_transformer"](y_te)
+        y_te_pred = params[scoring]["predictor"](model, X_te)
 
         try:
-            score = params[scoring]["scorer"](y_test_transformed, y_test_pred)
+            score = params[scoring]["scorer"](y_te_transformed, y_te_pred)
         except ValueError as e:
             score = failure_value
             print(traceback.format_exc(), file=sys.stderr)
@@ -165,21 +171,23 @@ class Modeler:
 
         if self._is_classification():
             kf = StratifiedKFold(shuffle=True, random_state=RANDOM_STATE + 3)
-        else:
+        elif self._is_regression():
             kf = KFold(shuffle=True, random_state=RANDOM_STATE + 4)
+        else:
+            raise NotImplementedError
 
         # Split data, train model, and evaluate metric. We fit the model just
         # once per fold.
         scoring_outputs = defaultdict(lambda: [])
-        for train_inds, test_inds in kf.split(X, y):
-            X_train, X_test = X[train_inds], X[test_inds]
-            y_train, y_test = y[train_inds], y[test_inds]
+        for inds_tr, inds_te in kf.split(X, y):
+            X_tr, X_te = X[inds_tr], X[inds_te]
+            y_tr, y_te = y[inds_tr], y[inds_te]
 
-            self.estimator.fit(X_train, y_train)
+            self.estimator.fit(X_tr, y_tr)
 
             for scoring in scorings:
-                score = self._do_scoring(scoring, params, self.estimator, X_test,
-                                         y_test, failure_value=np.nan)
+                score = self._do_scoring(scoring, params, self.estimator, X_te,
+                                         y_te, failure_value=np.nan)
                 scoring_outputs[scoring].append(score)
 
         for scoring in scoring_outputs:
@@ -226,11 +234,11 @@ class Modeler:
         # scoring function.
 
         # predictors
-        def predict(model, X_test):
-            return model.predict(X_test)
+        def predict(model, X_te):
+            return model.predict(X_te)
 
-        def predict_prob(model, X_test):
-            return model.predict_proba(X_test)
+        def predict_prob(model, X_te):
+            return model.predict_proba(X_te)
 
         # transformers
         def noop(y_true):
