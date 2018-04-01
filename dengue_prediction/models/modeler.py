@@ -2,6 +2,7 @@ import sys
 import traceback
 from collections import defaultdict
 
+import funcy
 import numpy as np
 import pandas as pd
 import sklearn.metrics
@@ -11,12 +12,28 @@ from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
+from dengue_prediction.config import load_config
 from dengue_prediction.models import constants
-from dengue_prediction.models.constants import (ClassificationMetricAgg,
-                                                MetricComputationApproach,
-                                                ProblemType)
+from dengue_prediction.models.constants import (
+    ClassificationMetricAgg, MetricComputationApproach, ProblemType)
 from dengue_prediction.models.metrics import Metric, MetricList
 from dengue_prediction.util import RANDOM_STATE
+
+
+def create_model():
+    config = load_config()
+    problem_type_str = funcy.get_in(config, ['problem', 'problem_type'])
+    problem_type = None
+    for member in ProblemType:
+        if member.name == problem_type.upper():
+            problem_type = member
+            break
+    if problem_type:
+        return Modeler(problem_type)
+    else:
+        # TODO
+        raise RuntimeError(
+            'Bad problem type in config.yml: {}'.format(problem_type_str))
 
 
 class Modeler:
