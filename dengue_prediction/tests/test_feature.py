@@ -6,9 +6,10 @@ import pandas as pd
 import sklearn.preprocessing
 
 from dengue_prediction.features.feature import Feature, make_robust_transformer
-from dengue_prediction.util import (FragileTransformer,
-                                    FragileTransformerPipeline,
-                                    IdentityTransformer, asarray2d)
+from dengue_prediction.features.transformers import IdentityTransformer
+from dengue_prediction.tests.util import (
+    FragileTransformer, FragileTransformerPipeline)
+from dengue_prediction.util import asarray2d
 
 
 class TestFeature(unittest.TestCase):

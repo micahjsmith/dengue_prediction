@@ -5,10 +5,9 @@ import sklearn.decomposition
 import sklearn.preprocessing
 
 from dengue_prediction.features.feature import Feature
-from dengue_prediction.features.transformers import (LagImputer, NamedFramer,
-                                                     NullFiller, NullIndicator,
-                                                     SimpleFunctionTransformer,
-                                                     SingleLagger)
+from dengue_prediction.features.transformers import (
+    IdentityTransformer, LagImputer, NamedFramer, NullFiller, NullIndicator,
+    SimpleFunctionTransformer, SingleLagger)
 
 
 def get_features():

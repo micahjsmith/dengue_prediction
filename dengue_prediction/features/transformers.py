@@ -1,9 +1,10 @@
+import funcy
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import FeatureUnion
 
-from dengue_predicition.util import get_arr_desc
+from dengue_prediction.util import get_arr_desc
 
 
 class NoFitMixin:
@@ -18,6 +19,11 @@ class SimpleFunctionTransformer(BaseEstimator, NoFitMixin, TransformerMixin):
 
     def transform(self, X, **transform_kwargs):
         return self.func(X)
+
+
+class IdentityTransformer(SimpleFunctionTransformer):
+    def __init__(self):
+        super().__init__(funcy.identity)
 
 
 class GroupedFunctionTransformer(BaseEstimator, NoFitMixin, TransformerMixin):
