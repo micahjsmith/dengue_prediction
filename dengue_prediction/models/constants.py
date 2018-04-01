@@ -1,9 +1,9 @@
-from enum import Enum, auto
+from enum import Enum
 
 
 class ProblemType(Enum):
-    CLASSIFICATION = auto()
-    REGRESSION = auto()
+    CLASSIFICATION = 1
+    REGRESSION = 2
 
 
 class ClassificationMetricAggregation(Enum):
@@ -12,8 +12,8 @@ class ClassificationMetricAggregation(Enum):
 
 
 class MetricComputationApproach(Enum):
-    CV = auto()
-    TRAIN_TEST = auto()
+    CV = 1
+    TRAIN_TEST = 2
 
 
 CLASSIFICATION_SCORING = [
