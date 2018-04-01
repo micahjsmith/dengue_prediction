@@ -9,12 +9,14 @@ logger = logging.getLogger(__name__)
 
 
 def train_model():
+    logger.info('Training model...')
     X_df_tr, y_df_tr = load_data()
     X_tr, mapper_X = build_features(X_df_tr, y_df_tr)
     y_tr, mapper_y = build_target(y_df_tr)
     model = create_model()
     model.fit(X_tr, y_df_tr)
     # todo save model
+    logger.info('Training model...DONE')
     return model
 
 

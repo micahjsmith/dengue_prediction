@@ -25,7 +25,7 @@ def create_model():
     problem_type_str = funcy.get_in(config, ['problem', 'problem_type'])
     problem_type = None
     for member in ProblemType:
-        if member.name == problem_type.upper():
+        if member.name == problem_type_str.upper():
             problem_type = member
             break
     if problem_type:
@@ -351,7 +351,7 @@ class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
         elif isinstance(X, pd.DataFrame):
             return {
                 'index': X.index,
-                'dtype': X.dtype,
+                'dtypes': X.dtypes,
                 'columns': X.columns,
             }
         elif isinstance(X, np.ndarray):
@@ -399,9 +399,9 @@ class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
                 data = X
                 index = self.original_info_['index']
                 columns = self.original_info_['columns']
-                dtype = self.original_info_['dtype']
+                dtypes = self.original_info_['dtypes']
                 return pd.DataFrame(data=data, index=index,
-                                    columns=columns, dtype=dtype)
+                                    columns=columns, dtypes=dtypes)
             elif issubclass(self.orginal_type_, np.ndarray):
                 # only thing we might have done is change dimensions for 1d/2d
                 if self.original_info_['ndim'] == 1:

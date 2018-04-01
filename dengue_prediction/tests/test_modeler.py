@@ -3,8 +3,8 @@ import unittest
 import pandas as pd
 import sklearn.datasets
 
-from dengue_prediction.models.constants import (MetricComputationApproach,
-                                                ProblemType)
+from dengue_prediction.models.constants import (
+    MetricComputationApproach, ProblemType)
 from dengue_prediction.models.modeler import Modeler
 from dengue_prediction.tests.util import EPSILON
 
