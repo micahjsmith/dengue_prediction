@@ -18,17 +18,13 @@ from dengue_prediction.models import constants
 from dengue_prediction.models.constants import (
     ClassificationMetricAgg, MetricComputationApproach)
 from dengue_prediction.models.metrics import Metric, MetricList
-from dengue_prediction.util import RANDOM_STATE
+from dengue_prediction.util import RANDOM_STATE, str_to_enum_member
 
 
 def create_model():
     config = load_config()
     problem_type_str = funcy.get_in(config, ['problem', 'problem_type'])
-    problem_type = None
-    for member in ProblemType:
-        if member.name == problem_type_str.upper():
-            problem_type = member
-            break
+    problem_type = str_to_enum_member(problem_type_str, ProblemType)
     if problem_type:
         return Modeler(problem_type)
     else:

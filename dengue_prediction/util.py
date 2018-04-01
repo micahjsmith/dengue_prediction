@@ -71,8 +71,7 @@ class LoggingContext(object):
     '''
     Logging context manager
 
-    Source: <https://docs.python.org/3/howto/logging-cookbook.html
-             #using-a-context-manager-for-selective-logging>
+    Source: <https://docs.python.org/3/howto/logging-cookbook.html #using-a-context-manager-for-selective-logging>  #noqa
     '''
 
     def __init__(self, logger, level=None, handler=None, close=True):
@@ -96,3 +95,11 @@ class LoggingContext(object):
         if self.handler and self.close:
             self.handler.close()
         # implicit return of None => don't swallow exceptions
+
+
+def str_to_enum_member(s, E):
+    '''Find the member of enum E with name given by string s (ignoring case)'''
+    for member in E:
+        if member.name == s.upper():
+            return member
+    return None
