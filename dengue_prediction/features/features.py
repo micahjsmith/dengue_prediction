@@ -10,7 +10,7 @@ from dengue_prediction.features.transformers import (
     SimpleFunctionTransformer, SingleLagger)
 
 
-def get_features():
+def get_feature_transformations():
     features = []
 
     features.append(

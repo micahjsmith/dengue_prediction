@@ -8,18 +8,17 @@ from dengue_prediction.features.features import get_features
 logger = logging.getLogger(__name__)
 
 
-def build_features():
-    X_df, y = load_data()
-
+def build_features(X_df, y_df):
     logger.info('Building features...')
-    features = get_features()
+    feature_transformations = get_feature_transformations()
     mapper = sklearn_pandas.DataFrameMapper([
-        feature.as_sklearn_pandas_tuple() for feature in features
+        t.as_sklearn_pandas_tuple() for t in feature_transformations
     ], input_df=True)
-    X = mapper.fit_transform(X_df, y)
+    X = mapper.fit_transform(X_df, y_df)
     logger.info('Building features...DONE')
     return X, mapper
 
 
 if __name__ == '__main__':
-    build_features()
+    X_df, y_df = load_data()
+    build_features(X_df, y_df)
