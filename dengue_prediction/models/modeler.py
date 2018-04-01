@@ -2,18 +2,17 @@ import sys
 import traceback
 from collections import defaultdict
 
-import funcy
 import numpy as np
 import pandas as pd
 import sklearn.metrics
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import KFold, StratifiedKFold
-from sklearn.preprocessing import label_binarize, LabelEncoder
+from sklearn.preprocessing import LabelEncoder, label_binarize
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from dengue_prediction.models import constants
-from dengue_prediction.models.constants import (ClassificationMetricAggregation,
+from dengue_prediction.models.constants import (ClassificationMetricAgg,
                                                 MetricComputationApproach,
                                                 ProblemType)
 from dengue_prediction.models.metrics import Metric, MetricList
@@ -42,7 +41,7 @@ class Modeler:
         self.model.fit(X, y, **fit_kwargs)
         return self
 
-    #def predict(self, X, **predict_kwargs):
+    # def predict(self, X, **predict_kwargs):
     #    # TODO scary, figure out the lifecycle of a FeatureTypeTransformer
     #    X = self.feature_type_transformer.fit_transform(X)
     #    return self.model.predict(X, **predict_kwargs))
@@ -198,9 +197,11 @@ class Modeler:
         n_classes = len(classes)
         is_binary = n_classes == 2
         if is_binary:
-            metric_aggregation = ClassificationMetricAggregation.BINARY_METRIC_AGGREGATION
+            metric_aggregation = (
+                ClassificationMetricAgg.BINARY_METRIC_AGGREGATION)
         else:
-            metric_aggregation = ClassificationMetricAggregation.MULTICLASS_METRIC_AGGREGATION
+            metric_aggregation = (
+                ClassificationMetricAgg.MULTICLASS_METRIC_AGGREGATION)
         metric_aggregation = metric_aggregation.value
 
         # Determine predictor (labels, label probabilities, or values) and
@@ -232,20 +233,24 @@ class Modeler:
             "precision": {
                 "predictor": predict,
                 "pred_transformer": noop,
-                "scorer": lambda y_true, y_pred: sklearn.metrics.precision_score(
-                    y_true, y_pred, average=metric_aggregation),
+                "scorer": lambda y_true, y_pred:
+                    sklearn.metrics.precision_score(y_true, y_pred,
+                                                    average=metric_aggregation)
             },
             "recall": {
                 "predictor": predict,
                 "pred_transformer": noop,
-                "scorer": lambda y_true, y_pred: sklearn.metrics.recall_score(
-                    y_true, y_pred, average=metric_aggregation),
+                "scorer": lambda y_true, y_pred:
+                    sklearn.metrics.recall_score(y_true, y_pred,
+                                                 average=metric_aggregation),
             },
             "roc_auc": {
                 "predictor": predict if is_binary else predict_prob,
-                "pred_transformer": noop if is_binary else transformer_binarize,
-                "scorer": lambda y_true, y_pred: sklearn.metrics.roc_auc_score(
-                    y_true, y_pred, average=metric_aggregation),
+                "pred_transformer":
+                    noop if is_binary else transformer_binarize,
+                "scorer": lambda y_true, y_pred:
+                    sklearn.metrics.roc_auc_score(y_true, y_pred,
+                                                  average=metric_aggregation),
             },
             "root_mean_squared_error": {
                 "predictor": predict,
@@ -345,20 +350,24 @@ class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
     def transform(self, X, **transform_kwargs):
         if isinstance(X, pd.Series):
             return X.values
-            #return X.to_frame().to_records(index=False))
+            # return X.to_frame().to_records(index=False))
         elif isinstance(X, pd.DataFrame):
             return X.values
-            #return np.asarray(X.to_records(index=False))
+            # return np.asarray(X.to_records(index=False))
         elif isinstance(X, np.ndarray):
             if X.ndim == 1:
                 return X.reshape(-1, 1)
             elif X.ndim == 2:
                 return X
             elif X.ndim >= 3:
-                raise TypeError(FeatureTypeTransformer.BAD_SHAPE_MSG.format(X.shape))
+                raise TypeError(
+                    FeatureTypeTransformer.BAD_SHAPE_MSG.format(
+                        X.shape))
         else:
             # should be unreachable
-            raise TypeError(FeatureTypeTransformer.BAD_TYPE_MSG.format(type(X)))
+            raise TypeError(
+                FeatureTypeTransformer.BAD_TYPE_MSG.format(
+                    type(X)))
 
     def inverse_transform(self, X, **inverse_transform_kwargs):
         if hasattr(self, 'original_type_') and hasattr(self, 'original_info_'):
@@ -367,13 +376,15 @@ class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
                 index = self.original_info_['index']
                 name = self.original_info_['name']
                 dtype = self.original_info_['dtype']
-                return pd.Series(data=data, index=index, name=name, dtype=dtype)
+                return pd.Series(data=data, index=index,
+                                 name=name, dtype=dtype)
             elif issubclass(self.original_type_, pd.DataFrame):
                 data = X
                 index = self.original_info_['index']
                 columns = self.original_info_['columns']
                 dtype = self.original_info_['dtype']
-                return pd.DataFrame(data=data, index=index, columns=columns, dtype=dtype)
+                return pd.DataFrame(data=data, index=index,
+                                    columns=columns, dtype=dtype)
             elif issubclass(self.orginal_type_, np.ndarray):
                 # only thing we might have done is change dimensions for 1d/2d
                 if self.original_info_['ndim'] == 1:

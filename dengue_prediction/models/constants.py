@@ -6,7 +6,7 @@ class ProblemType(Enum):
     REGRESSION = 2
 
 
-class ClassificationMetricAggregation(Enum):
+class ClassificationMetricAgg(Enum):
     BINARY_METRIC_AGGREGATION = "micro"
     MULTICLASS_METRIC_AGGREGATION = "micro"
 

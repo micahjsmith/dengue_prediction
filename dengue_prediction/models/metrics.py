@@ -172,8 +172,8 @@ class MetricList(MutableSequence):
     def convert(self, kind="user"):
         """Convert underlying metric objects.
 
-        Conversion to user format returns a dictionary with each element mapping
-        metric name to metric value. Conversion to db format returns a
+        Conversion to user format returns a dictionary with each element
+        mapping metric name to metric value. Conversion to db format returns a
         list of dictionaries, each with keys "name", "scoring", and "value"
         mapping to their respective values. Both formats convert np.floating
         values to Python floats.

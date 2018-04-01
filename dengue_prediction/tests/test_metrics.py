@@ -2,12 +2,13 @@ import unittest
 
 from dengue_prediction.models.metrics import Metric, MetricList
 
+
 class TestMetric(unittest.TestCase):
 
     def setUp(self):
-        name    = "Accuracy"
+        name = "Accuracy"
         scoring = "accuracy"
-        value   = 0.0
+        value = 0.0
         self.metric = Metric(name, scoring, value)
 
     def test_conversion_user(self):
@@ -19,6 +20,7 @@ class TestMetric(unittest.TestCase):
         self.assertEqual(
             self.metric,
             Metric.from_dict(self.metric.convert(kind="db"), kind="db"))
+
 
 class TestMetricList(unittest.TestCase):
 
