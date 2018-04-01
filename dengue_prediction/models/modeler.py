@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import sklearn.metrics
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder, label_binarize
@@ -45,14 +46,17 @@ class Modeler:
 
     def __init__(self, problem_type):
         self.problem_type = problem_type
-        self.model = self._get_default_estimator()
+        self.estimator = self._get_default_estimator()
         self.feature_type_transformer = FeatureTypeTransformer()
         self.target_type_transformer = TargetTypeTransformer()
+
+    def set_estimator(self, estimator):
+        self.estimator = estimator
 
     def fit(self, X, y, **fit_kwargs):
         X = self.feature_type_transformer.fit_transform(X)
         y = self.target_type_transformer.fit_transform(y)
-        self.model.fit(X, y, **fit_kwargs)
+        self.estimator.fit(X, y, **fit_kwargs)
         return self
 
     # def predict(self, X, **predict_kwargs):
@@ -108,11 +112,11 @@ class Modeler:
         params = self._get_params(classes)
 
         # fit model on entire training set
-        self.model.fit(X_train, y_train)
+        self.estimator.fit(X_train, y_train)
 
         scores = {}
         for scoring in scorings_:
-            scores[scoring] = self._do_scoring(scoring, params, self.model,
+            scores[scoring] = self._do_scoring(scoring, params, self.estimator,
                                                X_test, y_test)
 
         metric_list = self.scores_to_metriclist(scorings, scores)
@@ -171,10 +175,10 @@ class Modeler:
             X_train, X_test = X[train_inds], X[test_inds]
             y_train, y_test = y[train_inds], y[test_inds]
 
-            self.model.fit(X_train, y_train)
+            self.estimator.fit(X_train, y_train)
 
             for scoring in scorings:
-                score = self._do_scoring(scoring, params, self.model, X_test,
+                score = self._do_scoring(scoring, params, self.estimator, X_test,
                                          y_test, failure_value=np.nan)
                 scoring_outputs[scoring].append(score)
 
@@ -316,21 +320,27 @@ class Modeler:
 
     def _get_default_estimator(self):
         if self._is_classification():
-            return Modeler._get_default_classifier()
+            return self._get_default_classifier()
         elif self._is_regression():
-            return Modeler._get_default_regressor()
+            return self._get_default_regressor()
         else:
             raise NotImplementedError
 
-    @staticmethod
-    def _get_default_classifier():
-        return DecisionTreeClassifier(random_state=RANDOM_STATE + 1)
-        # return RandomForestClassifier(random_state=RANDOM_STATE+1)
+    def _get_default_classifier(self):
+        return RandomForestClassifier(random_state=RANDOM_STATE+1)
 
-    @staticmethod
-    def _get_default_regressor():
+    def _get_default_regressor(self):
+        return RandomForestRegressor(random_state=RANDOM_STATE+2)
+
+
+class DecisionTreeModeler(Modeler):
+
+    def _get_default_classifier(self):
+        return DecisionTreeClassifier(random_state=RANDOM_STATE + 1)
+
+    def _get_default_regressor(self):
         return DecisionTreeRegressor(random_state=RANDOM_STATE + 2)
-        # return RandomForestRegressor(random_state=RANDOM_STATE+2)
+
 
 
 class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
@@ -427,9 +437,11 @@ class TargetTypeTransformer(FeatureTypeTransformer):
         y = super().transform(y)
         if self.needs_label_encoder:
             y = self.label_encoder_.transform(y)
+        y = y.ravel()
         return y
 
     def inverse_transform(self, y, **inverse_transform_kwargs):
+        # TODO do we require inverse of ravel?
         if self.needs_label_encoder:
             y = self.label_encoder_.inverse_transform(y)
         y = super().inverse_transform(y)

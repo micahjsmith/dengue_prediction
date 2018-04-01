@@ -4,8 +4,8 @@ import pandas as pd
 import sklearn.datasets
 
 from dengue_prediction.constants import ProblemType
-from dengue_prediction.models.constants import MetricComputationApproach 
-from dengue_prediction.models.modeler import Modeler
+from dengue_prediction.models.constants import MetricComputationApproach
+from dengue_prediction.models.modeler import DecisionTreeModeler
 from dengue_prediction.tests.util import EPSILON
 
 
@@ -104,7 +104,7 @@ class TestModeler(unittest.TestCase):
             metrics_user['R-squared'], 0.2656004, delta=EPSILON)
 
     def _test_problem_type_cv(self, problem_type, data):
-        model = Modeler(problem_type)
+        model = DecisionTreeModeler(problem_type)
         X = data[problem_type]["X"]
         y = data[problem_type]["y"]
         metrics = model.compute_metrics(X, y)
@@ -112,7 +112,7 @@ class TestModeler(unittest.TestCase):
         return metrics
 
     def _test_problem_type_train_test(self, problem_type, data):
-        model = Modeler(problem_type)
+        model = DecisionTreeModeler(problem_type)
         X = data[problem_type]["X"]
         y = data[problem_type]["y"]
         n = round(0.7 * len(X))
