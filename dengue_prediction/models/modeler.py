@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import sklearn.metrics
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.externals import joblib
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.preprocessing import label_binarize
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -75,7 +76,30 @@ class Modeler:
 
         # unpack into MetricList
         metric_list = self.scores_to_metriclist(scorings, scores)
-        return metric_list
+
+    def fit(self, X, y, **kwargs):
+        X, y = self._format_inputs(X, y)
+        self.model.fit(X_train, y, **kwargs)
+
+    def predict(self, X):
+        X = self._format_X(X)
+        return self.model.predict(X)
+
+    def predict_proba(self, X):
+        X = self._format_X(X)
+        return self.model.predict_proba(X)
+
+    def score(self, X, y):
+        X, y = self._format_inputs(X, y)
+        return self.model.score(X, y)
+
+    def dump(self, filepath):
+        joblib.dump(self.model, filepath)
+
+    def load(self, filepath):
+        if not os.path.exists(filepath):
+            raise ValueError("Couldn't find model at {}".format(filepath))
+        self.model = joblib.load(absname)
 
     def _compute_metrics_train_test_fitted(self, X, y, classes=None):
         scorings, scorings_ = self._get_scorings()
@@ -299,9 +323,13 @@ class Modeler:
         return scorings, scorings_
 
     def _format_inputs(self, X, y):
-        X = self.feature_type_transformer.fit_transform(X)
-        y = self.target_type_transformer.fit_transform(y)
-        return X, y
+        return self._format_X(X), self._format_y(y)
+
+    def _format_y(self, y):
+        return self.target_type_transformer.fit_transform(y)
+
+    def _format_X(self, X):
+        return self.feature_type_transformer.fit_transform(X)
 
     def _get_default_estimator(self):
         if self._is_classification():
