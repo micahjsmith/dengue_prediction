@@ -96,7 +96,7 @@ class Modeler:
         return self.estimator.score(X, y)
 
     def dump(self, filepath):
-        joblib.dump(self.estimator, filepath)
+        joblib.dump(self.estimator, filepath, compress=True)
 
     def load(self, filepath):
         if not os.path.exists(filepath):
@@ -242,7 +242,7 @@ class Modeler:
         def predict(model, X_te):
             return model.predict(X_te)
 
-        def predict_prob(model, X_te):
+        def predict_proba(model, X_te):
             return model.predict_proba(X_te)
 
         # transformers
@@ -273,7 +273,7 @@ class Modeler:
                                                  average=metric_aggregation),
             },
             "roc_auc": {
-                "predictor": predict if is_binary else predict_prob,
+                "predictor": predict if is_binary else predict_proba,
                 "pred_transformer":
                     funcy.identity if is_binary else transformer_binarize,
                 "scorer": lambda y_true, y_pred:

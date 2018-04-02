@@ -105,14 +105,17 @@ def str_to_enum_member(s, E):
             return member
     return None
 
+
 def spliceext(filepath, s):
     '''Add s into filepath before the extension'''
     root, ext = os.path.splitext(filepath)
     return root + s + ext
 
+
 def replaceext(filepath, new_ext):
     root, ext = os.path.splitext(filepath)
     return root + new_ext
+
 
 def splitext2(filepath):
     '''Split filepath into root, filename, ext'''
