@@ -12,6 +12,7 @@ with open('HISTORY.md') as history_file:
     history = history_file.read()
 
 requirements = [
+    'btb',
     'category_encoders',
     'funcy',
     'numpy',
@@ -28,6 +29,14 @@ setup_requirements = [
 test_requirements = [
     'pytest',
     # TODO: put package test requirements here
+]
+
+#extras_require = {
+#    'btb': ['btb']
+#}
+
+dependency_links= [
+    'git+https://github.com/HDI-Project/BTB.git@30cc8d1affea2b37771eb865b9df30dc9d0657e8#egg=btb-0.2.0',
 ]
 
 setup(
@@ -60,4 +69,5 @@ setup(
     test_suite='dengue_prediction/tests',
     tests_require=test_requirements,
     setup_requires=setup_requirements,
+    extra_requires=extra_requires,
 )
