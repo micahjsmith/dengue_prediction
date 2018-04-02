@@ -9,7 +9,7 @@ import numpy as np
 import sklearn.metrics
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.externals import joblib
-from sklearn.model_selection import KFold, StratifiedKFold
+from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score
 from sklearn.preprocessing import label_binarize
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
@@ -372,16 +372,17 @@ class SelfTuningMixin:
         if btb is not None:
             self.tuner = btb.GP(self.tunables)
             for i in range(self.tuning_iter):
-                params = tuner.propose()
+                params = self.tuner.propose()
                 self.set_params(**params)
                 score = cross_val_score(self, X, y, cv=self.tuning_cv)
-                tuner.add(params, score)
+                self.tuner.add(params, score)
 
-            best_params = tuner._best_hyperparams
+            best_params = self.tuner._best_hyperparams
             self.set_params(**best_params)
 
         super().fit(X, y, **fit_kwargs)
         return self
+
 
 class SelfTuningRandomForestMixin(SelfTuningMixin):
     def __init__(self, *args, **kwargs):
@@ -394,11 +395,16 @@ class SelfTuningRandomForestMixin(SelfTuningMixin):
                  btb.HyperParameter(btb.ParamTypes.INT, [3, 20]))
             ]
 
-class TunedRandomForestRegressor(SelfTuningRandomForestMixin, RandomForestRegressor):
+
+class TunedRandomForestRegressor(
+        SelfTuningRandomForestMixin, RandomForestRegressor):
     pass
 
-class TunedRandomForestClassifier(SelfTuningRandomForestMixin, RandomForestClassifier):
+
+class TunedRandomForestClassifier(
+        SelfTuningRandomForestMixin, RandomForestClassifier):
     pass
+
 
 class TunedModeler(Modeler):
     def _get_default_classifier(self):

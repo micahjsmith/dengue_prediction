@@ -8,4 +8,4 @@ numpy
 pandas
 scikit_learn
 sklearn_pandas
--e git+https://github.com/HDI-Project/BTB.git@30cc8d1affea2b37771eb865b9df30dc9d0657e8#egg=btb-0.2.0
+git+https://github.com/HDI-Project/BTB.git@30cc8d1affea2b37771eb865b9df30dc9d0657e8#egg=btb-0.2.0
