@@ -1,11 +1,15 @@
 import logging
+import os
 
 import click
 import sklearn_pandas
 
+from dengue_prediction.config import load_config, get_table_abspath
 from dengue_prediction.data.make_dataset import load_data
 from dengue_prediction.features.features import (
     get_feature_transformations, get_target_transformations)
+from dengue_prediction.io import write_tabular
+from dengue_prediction.util import spliceext, replaceext
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +57,24 @@ def main(input_dir, output_dir):
     y = mapper_y.transform(y_df)
     logger.info('Building target...DONE')
 
-    return X, y
+    # save to output_dir
+    os.makedirs(output_dir, exist_ok=True)
+    def namer(table_name, filetype='pkl'):
+        fn = get_table_abspath(output_dir, table_name)
+        fn = spliceext(fn, '_featurized')
+        fn = replaceext(fn, '.' + filetype)
+        return fn
+
+    config = load_config()
+    entities_table_name = config['problem']['data']['entities_table_name']
+    fn_X = namer(entities_table_name)
+    write_tabular(X, fn_X)
+
+    target_table_name = config['problem']['data']['target_table_name']
+    fn_y = namer(target_table_name)
+    write_tabular(y, fn_y)
 
 
 if __name__ == '__main__':
-    logger.setLevel(logging.INFO)
+    logging.basicConfig(level=logging.INFO)
     main()
