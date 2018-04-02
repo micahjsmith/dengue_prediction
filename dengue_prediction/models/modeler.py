@@ -354,3 +354,20 @@ class DecisionTreeModeler(Modeler):
 
     def _get_default_regressor(self):
         return DecisionTreeRegressor(random_state=RANDOM_STATE + 2)
+
+
+class BtbTuningMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        #self.tuner = GP()
+
+    def fit(self, X, y, **fit_kwargs):
+        # todo
+        super().fit(X, y, **fit_kwargs)
+        return self
+
+class TunedRandomForestRegressor(BtbTuningMixin, RandomForestRegressor):
+    pass
+
+class TunedRandomForestClassifier(BtbTuningMixin, RandomForestClassifier):
+    pass
