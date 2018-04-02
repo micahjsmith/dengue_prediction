@@ -4,6 +4,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import LabelEncoder
 
+
 class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
     BAD_TYPE_MSG = "Unsupported input type '{}'"
     BAD_SHAPE_MSG = "Unsupported input shape '{}'"

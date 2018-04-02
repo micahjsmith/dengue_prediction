@@ -1,13 +1,13 @@
 import logging
+import os
 import sys
 import traceback
 from collections import defaultdict
 
 import funcy
 import numpy as np
-import pandas as pd
 import sklearn.metrics
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.externals import joblib
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.preprocessing import label_binarize
@@ -16,14 +16,14 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from dengue_prediction.config import load_config
 from dengue_prediction.constants import ProblemType
 from dengue_prediction.models import constants
-from dengue_prediction.models.constants import (
-    ClassificationMetricAgg, MetricComputationApproach)
+from dengue_prediction.models.constants import ClassificationMetricAgg
 from dengue_prediction.models.input_type_transforms import (
     FeatureTypeTransformer, TargetTypeTransformer)
 from dengue_prediction.models.metrics import Metric, MetricList
 from dengue_prediction.util import RANDOM_STATE, str_to_enum_member
 
 logger = logging.getLogger(__name__)
+
 
 def create_model():
     config = load_config()
@@ -77,29 +77,31 @@ class Modeler:
         # unpack into MetricList
         metric_list = self.scores_to_metriclist(scorings, scores)
 
+        return metric_list
+
     def fit(self, X, y, **kwargs):
         X, y = self._format_inputs(X, y)
-        self.model.fit(X_train, y, **kwargs)
+        self.estimator.fit(X, y, **kwargs)
 
     def predict(self, X):
         X = self._format_X(X)
-        return self.model.predict(X)
+        return self.estimator.predict(X)
 
     def predict_proba(self, X):
         X = self._format_X(X)
-        return self.model.predict_proba(X)
+        return self.estimator.predict_proba(X)
 
     def score(self, X, y):
         X, y = self._format_inputs(X, y)
-        return self.model.score(X, y)
+        return self.estimator.score(X, y)
 
     def dump(self, filepath):
-        joblib.dump(self.model, filepath)
+        joblib.dump(self.estimator, filepath)
 
     def load(self, filepath):
         if not os.path.exists(filepath):
             raise ValueError("Couldn't find model at {}".format(filepath))
-        self.model = joblib.load(absname)
+        self.estimator = joblib.load(filepath)
 
     def _compute_metrics_train_test_fitted(self, X, y, classes=None):
         scorings, scorings_ = self._get_scorings()
@@ -114,8 +116,7 @@ class Modeler:
             scores[scoring] = self._do_scoring(scoring, params, self.estimator,
                                                X, y)
 
-        metric_list = self.scores_to_metriclist(scorings, scores)
-        return metric_list
+        return self.scores_to_metriclist(scorings, scores)
 
     def compute_metrics_train_test(self, X, y, n):
         """Compute metrics on test set.
@@ -340,10 +341,10 @@ class Modeler:
             raise NotImplementedError
 
     def _get_default_classifier(self):
-        return RandomForestClassifier(random_state=RANDOM_STATE+1)
+        return RandomForestClassifier(random_state=RANDOM_STATE + 1)
 
     def _get_default_regressor(self):
-        return RandomForestRegressor(random_state=RANDOM_STATE+2)
+        return RandomForestRegressor(random_state=RANDOM_STATE + 2)
 
 
 class DecisionTreeModeler(Modeler):

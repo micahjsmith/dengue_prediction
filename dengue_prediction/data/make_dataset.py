@@ -1,36 +1,49 @@
 import logging
-import os
 
 import click
-import funcy
 import pandas as pd
 from dotenv import find_dotenv, load_dotenv
 
 import dengue_prediction.config
 
 
-def load_data():
-    X = load_entities_table()
-    y = load_target_table()
+def load_data(input_dir=None):
+    if input_dir is None:
+        return _load_data_using_config()
+    else:
+        return _load_data_from_dir(input_dir)
+
+
+def _load_data_using_config():
+    train_dir = dengue_prediction.config.get_train_dir()
+    return _load_data_from_dir(train_dir)
+
+
+def _load_data_from_dir(input_dir):
+    X = _load_entities_table(input_dir)
+    y = _load_target_table(input_dir)
     return X, y
 
 
-def load_entities_table():
+def _load_entities_table(input_dir):
+    return _load_table_type('entities_table_name', input_dir)
+
+
+def _load_target_table(input_dir):
+    return _load_table_type('target_table_name', input_dir)
+
+
+def _load_table_type(table_type, input_dir):
     config = dengue_prediction.config.load_config()
-    return _load_named_table(config['problem']['data']['entities_table_name'])
+    return _load_named_table(
+        input_dir, config['problem']['data'][table_type])
 
 
-def load_target_table():
-    config = dengue_prediction.config.load_config()
-    return _load_named_table(config['problem']['data']['target_table_name'])
-
-
-def _load_named_table(table_name):
+def _load_named_table(input_dir, table_name):
     table_config = dengue_prediction.config.get_table_config(table_name)
-    fn = dengue_prediction.config.get_table_abspath(table_name)
-    kwargs = table_config['pd_read_kwargs']
-    with open(fn, 'r') as f:
-        return pd.read_csv(f, **kwargs)
+    pd_read_kwargs = table_config['pd_read_kwargs']
+    fn = dengue_prediction.config.get_table_abspath(input_dir, table_name)
+    return pd.read_csv(fn, **pd_read_kwargs)
 
 
 @click.command()

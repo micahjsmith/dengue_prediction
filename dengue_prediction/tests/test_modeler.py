@@ -4,7 +4,6 @@ import pandas as pd
 import sklearn.datasets
 
 from dengue_prediction.constants import ProblemType
-from dengue_prediction.models.constants import MetricComputationApproach
 from dengue_prediction.models.modeler import DecisionTreeModeler
 from dengue_prediction.tests.util import EPSILON
 
