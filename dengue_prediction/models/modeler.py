@@ -22,6 +22,11 @@ from dengue_prediction.models.input_type_transforms import (
 from dengue_prediction.models.metrics import Metric, MetricList
 from dengue_prediction.util import RANDOM_STATE, str_to_enum_member
 
+try:
+    import btb
+except ImportError:
+    btb = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -356,18 +361,48 @@ class DecisionTreeModeler(Modeler):
         return DecisionTreeRegressor(random_state=RANDOM_STATE + 2)
 
 
-class BtbTuningMixin:
+class SelfTuningMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #self.tuner = GP()
+        self.tunables = None
+        self.tuning_iter = 10
+        self.tuning_cv = 5
 
     def fit(self, X, y, **fit_kwargs):
-        # todo
+        if btb is not None:
+            self.tuner = btb.GP(self.tunables)
+            for i in range(self.tuning_iter):
+                params = tuner.propose()
+                self.set_params(**params)
+                score = cross_val_score(self, X, y, cv=self.tuning_cv)
+                tuner.add(params, score)
+
+            best_params = tuner._best_hyperparams
+            self.set_params(**best_params)
+
         super().fit(X, y, **fit_kwargs)
         return self
 
-class TunedRandomForestRegressor(BtbTuningMixin, RandomForestRegressor):
+class SelfTuningRandomForestMixin(SelfTuningMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if btb is not None:
+            self.tunables = [
+                ('n_estimators',
+                 btb.HyperParameter(btb.ParamTypes.INT, [10, 500])),
+                ('max_depth',
+                 btb.HyperParameter(btb.ParamTypes.INT, [3, 20]))
+            ]
+
+class TunedRandomForestRegressor(SelfTuningRandomForestMixin, RandomForestRegressor):
     pass
 
-class TunedRandomForestClassifier(BtbTuningMixin, RandomForestClassifier):
+class TunedRandomForestClassifier(SelfTuningRandomForestMixin, RandomForestClassifier):
     pass
+
+class TunedModeler(Modeler):
+    def _get_default_classifier(self):
+        return TunedRandomForestClassifier(random_state=RANDOM_STATE + 1)
+
+    def _get_default_regressor(self):
+        return TunedRandomForestRegressor(random_state=RANDOM_STATE + 2)
