@@ -1,6 +1,7 @@
 import random
 
 import funcy
+import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn_pandas.pipeline import TransformerPipeline
 
@@ -59,3 +60,29 @@ class FragileTransformerPipeline(TransformerPipeline):
             rand.shuffle(steps)
 
         super().__init__(steps)
+
+
+@funcy.contextmanager
+def seeded(seed):
+    if seed is not None:
+        np_random_state = np.random.get_state()
+        random_state = random.getstate()
+        np.random.seed(seed)
+        random.seed(seed)
+
+    yield
+
+    if seed is not None:
+        np.random.set_state(np_random_state)
+        random.setstate(random_state)
+
+
+@funcy.contextmanager
+def log_seed_on_error(logger, seed=None):
+    if seed is None:
+        seed = random.randint(0, 2**32 - 1)
+    try:
+        with seeded(seed):
+            yield
+    except Exception as e:
+        logger.exception('Error was thrown using seed {}'.format(seed))
