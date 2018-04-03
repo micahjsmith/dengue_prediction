@@ -64,6 +64,7 @@ class FragileTransformerPipeline(TransformerPipeline):
 
 @funcy.contextmanager
 def seeded(seed):
+    '''Set seed, run code, then restore rng state'''
     if seed is not None:
         np_random_state = np.random.get_state()
         random_state = random.getstate()
@@ -79,6 +80,7 @@ def seeded(seed):
 
 @funcy.contextmanager
 def log_seed_on_error(logger, seed=None):
+    '''Store seed, run code, and report seed if error'''
     if seed is None:
         seed = random.randint(0, 2**32 - 1)
     try:

@@ -15,6 +15,7 @@ from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from dengue_prediction.config import load_config
 from dengue_prediction.constants import ProblemType
+from dengue_prediction.exceptions import ConfigurationError
 from dengue_prediction.models import constants
 from dengue_prediction.models.constants import ClassificationMetricAgg
 from dengue_prediction.models.input_type_transforms import (
@@ -49,6 +50,35 @@ def create_model(tuned=True):
         # TODO
         raise RuntimeError(
             'Bad problem type in config.yml: {}'.format(problem_type_str))
+
+
+def get_scorer():
+    config = load_config()
+    scorer = funcy.get_in(
+        config, ['problem', 'problem_type_details', 'scorer'])
+
+    found = False
+    try:
+        scoring = sklearn.metrics.get_scorer(scorer)
+        found = True
+    except ValueError:
+        pass
+
+    if not found:
+        i = scorer.rfind('.')
+        if i < 0:
+            raise ValueError('Invalid scorer import path: {}'.format(scorer))
+        module_name = scorer[:i]
+        scorer_name = scorer[i+1:]
+        mod = importlib.import_module(module_name)
+        scoring = getattr(mod, scorer_name)
+        found = True
+
+    if not found:
+        raise ConfigurationError(
+            'Could not get a scorer with configuration {}'.format(scorer))
+
+    return scoring
 
 
 class Modeler:
@@ -413,15 +443,17 @@ class SelfTuningMixin:
         return ParentClass()
 
     def fit(self, X, y, tune=True, **fit_kwargs):
-        # do some tuning
         if tune:
+            # do some tuning
             if btb is not None and self.tunables is not None:
+
+                # make scoring driver
+                scorer = get_scorer()
                 def score(estimator):
                     return np.mean(cross_val_score(
-                        estimator, X, y, cv=self.tuning_cv))
+                        estimator, X, y, scoring=scorer, cv=self.tuning_cv, fit_params=fit_kwargs))
 
                 logger.info('Tuning model using BTB GP tuner...')
-                # todo allow to be configured
                 tuner = btb.tuning.gp.GP(self.tunables)
                 estimator = self._get_parent_instance()
                 original_score = score(estimator)

@@ -2,12 +2,12 @@ problem:
   name: dengue_prediction
   problem_type: regression
   problem_type_details:
-    loss_function: mean_absolute_error
-    error_metric: mean_absolute_error
-    larger_is_better: false
+    # either
+    # - sklearn string http://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
+    # - function name, such as dengue_prediction.models.scoring.scorer using make_scorer
+    scorer: neg_mean_absolute_error
   data:
     train: 'data/raw'
-    test: 'data/raw/test'
     entities_table_name: dengue_features
     target_table_name: dengue_labels
 
