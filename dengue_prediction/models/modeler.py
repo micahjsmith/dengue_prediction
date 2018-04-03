@@ -24,18 +24,27 @@ from dengue_prediction.util import RANDOM_STATE, str_to_enum_member
 
 try:
     import btb
+    import btb.tuning.gp
 except ImportError:
     btb = None
 
 logger = logging.getLogger(__name__)
 
 
-def create_model():
+def create_model(tuned=True):
+    if tuned:
+        ModelerClass = TunedModeler
+    else:
+        ModelerClass = Modeler
     config = load_config()
     problem_type_str = funcy.get_in(config, ['problem', 'problem_type'])
     problem_type = str_to_enum_member(problem_type_str, ProblemType)
     if problem_type is not None:
-        return Modeler(problem_type)
+        logger.info('Initializing {} modeler...'.format(ModelerClass.__name__))
+        modeler = ModelerClass(problem_type)
+        logger.info(
+            'Initializing {} modeler...DONE'.format(ModelerClass.__name__))
+        return modeler
     else:
         # TODO
         raise RuntimeError(
@@ -362,38 +371,90 @@ class DecisionTreeModeler(Modeler):
 
 
 class SelfTuningMixin:
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.tunables = None
-        self.tuning_iter = 10
-        self.tuning_cv = 5
 
-    def fit(self, X, y, **fit_kwargs):
-        if btb is not None:
-            self.tuner = btb.GP(self.tunables)
-            for i in range(self.tuning_iter):
-                params = self.tuner.propose()
-                self.set_params(**params)
-                score = cross_val_score(self, X, y, cv=self.tuning_cv)
-                self.tuner.add(params, score)
+    # overwrite this to do anything
+    def get_tunables(self):
+        return None
 
-            best_params = self.tuner._best_hyperparams
-            self.set_params(**best_params)
+    @property
+    def tunables(self):
+        if not hasattr(self, '_tunables'):
+            self._tunables = self._get_tunables()
+        return self._tunables
 
-        super().fit(X, y, **fit_kwargs)
-        return self
+    @tunables.setter
+    def set_tunables(self, tunables):
+        self._tunables = tunables
+
+    @property
+    def tuning_cv(self):
+        if not hasattr(self, '_tuning_cv'):
+            self._tuning_cv = 3
+        return self._tuning_cv
+
+    @tunables.setter
+    def tuning_cv(self, tuning_cv):
+        self._tuning_cv = tuning_cv
+
+    @property
+    def tuning_iter(self):
+        if not hasattr(self, '_tuning_iter'):
+            self._tuning_iter = 3
+        return self._tuning_iter
+
+    @tunables.setter
+    def tuning_iter(self, tuning_iter):
+        self._tuning_iter = tuning_iter
+
+    def _get_parent_instance(self):
+        # this is probably a sign of bad design pattern
+        mro = type(self).__mro__
+        ParentClass = mro[mro.index(__class__) + 1]
+        return ParentClass()
+
+    def fit(self, X, y, tune=True, **fit_kwargs):
+        # do some tuning
+        if tune:
+            if btb is not None and self.tunables is not None:
+                def score(estimator):
+                    return np.mean(cross_val_score(estimator, X, y, cv=self.tuning_cv))
+
+                logger.info('Tuning model using BTB GP tuner...')
+                # todo allow to be configured
+                tuner = btb.tuning.gp.GP(self.tunables)
+                estimator = self._get_parent_instance()
+                original_score = score(estimator)
+                for i in range(self.tuning_iter):
+                    params = tuner.propose()
+                    estimator.set_params(**params)
+                    score_ = score(estimator)
+                    tuner.add(params, score_)
+
+                best_params = tuner._best_hyperparams
+                best_score = tuner._best_score
+                self.set_params(**best_params)
+                logger.info(
+                    'Tuning complete. Cross val score changed from {0:.3f} to {0:.3f}.'
+                    .format(original_score, best_score))
+            else:
+                logging.warning('Tuning requested, but either btb not '
+                                'installed or tunable HyperParameters not '
+                                'specified.')
+
+        return super().fit(X, y, **fit_kwargs)
 
 
 class SelfTuningRandomForestMixin(SelfTuningMixin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def get_tunables(self):
         if btb is not None:
-            self.tunables = [
+            return [
                 ('n_estimators',
                  btb.HyperParameter(btb.ParamTypes.INT, [10, 500])),
                 ('max_depth',
                  btb.HyperParameter(btb.ParamTypes.INT, [3, 20]))
             ]
+        else:
+            return None
 
 
 class TunedRandomForestRegressor(
