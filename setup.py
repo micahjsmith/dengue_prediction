@@ -12,7 +12,7 @@ with open('HISTORY.md') as history_file:
     history = history_file.read()
 
 requirements = [
-    'btb==0.2.0',
+    'btb',
     'category_encoders',
     'funcy',
     'numpy',
