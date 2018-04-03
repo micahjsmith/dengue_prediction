@@ -379,11 +379,11 @@ class SelfTuningMixin:
     @property
     def tunables(self):
         if not hasattr(self, '_tunables'):
-            self._tunables = self._get_tunables()
+            self._tunables = self.get_tunables()
         return self._tunables
 
     @tunables.setter
-    def set_tunables(self, tunables):
+    def tunables(self, tunables):
         self._tunables = tunables
 
     @property
@@ -392,7 +392,7 @@ class SelfTuningMixin:
             self._tuning_cv = 3
         return self._tuning_cv
 
-    @tunables.setter
+    @tuning_cv.setter
     def tuning_cv(self, tuning_cv):
         self._tuning_cv = tuning_cv
 
@@ -402,14 +402,14 @@ class SelfTuningMixin:
             self._tuning_iter = 3
         return self._tuning_iter
 
-    @tunables.setter
+    @tuning_iter.setter
     def tuning_iter(self, tuning_iter):
         self._tuning_iter = tuning_iter
 
     def _get_parent_instance(self):
         # this is probably a sign of bad design pattern
         mro = type(self).__mro__
-        ParentClass = mro[mro.index(__class__) + 1]
+        ParentClass = mro[mro.index(__class__) + 1]  # noqa
         return ParentClass()
 
     def fit(self, X, y, tune=True, **fit_kwargs):
@@ -417,7 +417,8 @@ class SelfTuningMixin:
         if tune:
             if btb is not None and self.tunables is not None:
                 def score(estimator):
-                    return np.mean(cross_val_score(estimator, X, y, cv=self.tuning_cv))
+                    return np.mean(cross_val_score(
+                        estimator, X, y, cv=self.tuning_cv))
 
                 logger.info('Tuning model using BTB GP tuner...')
                 # todo allow to be configured
@@ -434,7 +435,8 @@ class SelfTuningMixin:
                 best_score = tuner._best_score
                 self.set_params(**best_params)
                 logger.info(
-                    'Tuning complete. Cross val score changed from {0:.3f} to {0:.3f}.'
+                    'Tuning complete. '
+                    'Cross val score changed from {0:.3f} to {0:.3f}.'
                     .format(original_score, best_score))
             else:
                 logging.warning('Tuning requested, but either btb not '

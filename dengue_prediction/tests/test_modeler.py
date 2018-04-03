@@ -1,3 +1,4 @@
+import logging
 import unittest
 
 import pandas as pd
@@ -7,7 +8,9 @@ from dengue_prediction.constants import ProblemType
 from dengue_prediction.models.modeler import (
     DecisionTreeModeler, TunedModeler, TunedRandomForestClassifier,
     TunedRandomForestRegressor)
-from dengue_prediction.tests.util import EPSILON
+from dengue_prediction.tests.util import EPSILON, log_seed_on_error, seeded
+
+logger = logging.getLogger(__name__)
 
 
 class _CommonTesting:
@@ -58,10 +61,13 @@ class _CommonTesting:
 
         return metrics
 
-    def _call_method(self, method, problem_type):
-        metrics = getattr(self, method)(problem_type, self.data)
-        metrics_pd = getattr(self, method)(problem_type, self.data_pd)
+    def _call_method(self, method, problem_type, seed=None):
+        with seeded(seed):
+            metrics = getattr(self, method)(problem_type, self.data)
+        with seeded(seed):
+            metrics_pd = getattr(self, method)(problem_type, self.data_pd)
         return metrics, metrics_pd
+
 
 class TestModeler(_CommonTesting, unittest.TestCase):
 
@@ -124,34 +130,41 @@ class TestTunedModelers(_CommonTesting, unittest.TestCase):
         super().setUp()
         self.ModelerClass = TunedModeler
 
+    def test_classification_cv(self):
+        metrics, metrics_pd = self._call_method(
+            '_test_problem_type_cv', ProblemType.CLASSIFICATION, seed=1)
+        self.assertEqual(metrics, metrics_pd)
+
+    def test_classification_train_test(self):
+        metrics, metrics_pd = self._call_method(
+            '_test_problem_type_train_test', ProblemType.CLASSIFICATION,
+            seed=2)
+        self.assertEqual(metrics, metrics_pd)
+
+    def test_regression_cv(self):
+        metrics, metrics_pd = self._call_method(
+            '_test_problem_type_cv', ProblemType.REGRESSION, seed=3)
+
+    def test_regression_train_test(self):
+        metrics, metrics_pd = self._call_method(
+            '_test_problem_type_train_test', ProblemType.REGRESSION, seed=4)
+        self.assertEqual(metrics, metrics_pd)
+
     def _test_tuned_random_forest_estimator(self, Estimator, problem_type):
         model = Estimator()
         data = self.data[problem_type]
         X, y = data['X'], data['y']
-        model.fit(X, y, tune=False)
-        old_score = model.score(X, y)
-        model.fit(X, y, tune=True)
-        new_score = model.score(X, y)
-        self.assertGreaterEqual(new_score, old_score)
+        with log_seed_on_error(logger):
+            model.fit(X, y, tune=False)
+            old_score = model.score(X, y)
+            model.fit(X, y, tune=True)
+            new_score = model.score(X, y)
+            self.assertGreaterEqual(new_score, old_score)
 
     def test_tuned_random_forest_regressor(self):
-        self._test_tuned_random_forest_estimator(TunedRandomForestRegressor, ProblemType.REGRESSION)
+        self._test_tuned_random_forest_estimator(
+            TunedRandomForestRegressor, ProblemType.REGRESSION)
 
     def test_tuned_random_forest_classifier(self):
-        self._test_tuned_random_forest_estimator(TunedRandomForestClassifier, ProblemType.CLASSIFICATION)
-
-    def test_classification_cv(self):
-        metrics, metrics_pd = self._call_method(
-            '_test_problem_type_cv', ProblemType.CLASSIFICATION)
-        self.assertEqual(metrics, metrics_pd)
-    def test_classification_train_test(self):
-        metrics, metrics_pd = self._call_method(
-            '_test_problem_type_train_test', ProblemType.CLASSIFICATION)
-        self.assertEqual(metrics, metrics_pd)
-    def test_regression_cv(self):
-        metrics, metrics_pd = self._call_method(
-            '_test_problem_type_cv', ProblemType.REGRESSION)
-    def test_regression_train_test(self):
-        metrics, metrics_pd = self._call_method(
-            '_test_problem_type_train_test', ProblemType.REGRESSION)
-        self.assertEqual(metrics, metrics_pd)
+        self._test_tuned_random_forest_estimator(
+            TunedRandomForestClassifier, ProblemType.CLASSIFICATION)
