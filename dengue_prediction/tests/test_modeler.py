@@ -68,6 +68,12 @@ class _CommonTesting:
             metrics_pd = getattr(self, method)(problem_type, self.data_pd)
         return metrics, metrics_pd
 
+    def _prepare_metrics_for_assertions(metrics):
+        return {
+            metric['name']: metric['value']
+            for metric in metrics
+        }
+
 
 class TestModeler(_CommonTesting, unittest.TestCase):
 
@@ -79,49 +85,46 @@ class TestModeler(_CommonTesting, unittest.TestCase):
         metrics, metrics_pd = self._call_method(
             '_test_problem_type_cv', ProblemType.CLASSIFICATION)
         self.assertEqual(metrics, metrics_pd)
-        metrics_user = metrics.convert(kind="user")
+        metrics = self._prepare_metrics_for_assertions(metrics)
         self.assertAlmostEqual(
-            metrics_user['Accuracy'], 0.9403594, delta=EPSILON)
+            metrics['Accuracy'], 0.9403594, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['Precision'], 0.9403594, delta=EPSILON)
+            metrics['Precision'], 0.9403594, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['Recall'], 0.9403594, delta=EPSILON)
+            metrics['Recall'], 0.9403594, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['ROC AUC'], 0.9552696, delta=EPSILON)
+            metrics['ROC AUC'], 0.9552696, delta=EPSILON)
 
     def test_classification_train_test(self):
         metrics, metrics_pd = self._call_method(
             '_test_problem_type_train_test', ProblemType.CLASSIFICATION)
         self.assertEqual(metrics, metrics_pd)
-        metrics_user = metrics.convert(kind="user")
         self.assertAlmostEqual(
-            metrics_user['Accuracy'], 0.7777777, delta=EPSILON)
+            metrics['Accuracy'], 0.7777777, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['Precision'], 0.7777777, delta=EPSILON)
+            metrics['Precision'], 0.7777777, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['Recall'], 0.7777777, delta=EPSILON)
+            metrics['Recall'], 0.7777777, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['ROC AUC'], 0.8333333, delta=EPSILON)
+            metrics['ROC AUC'], 0.8333333, delta=EPSILON)
 
     def test_regression_cv(self):
         metrics, metrics_pd = self._call_method(
             '_test_problem_type_cv', ProblemType.REGRESSION)
         self.assertEqual(metrics, metrics_pd)
-        metrics_user = metrics.convert(kind="user")
         self.assertAlmostEqual(
-            metrics_user['Root Mean Squared Error'], 4.4761438, delta=EPSILON)
+            metrics['Root Mean Squared Error'], 4.4761438, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['R-squared'], 0.7393219, delta=EPSILON)
+            metrics['R-squared'], 0.7393219, delta=EPSILON)
 
     def test_regression_train_test(self):
         metrics, metrics_pd = self._call_method(
             '_test_problem_type_train_test', ProblemType.REGRESSION)
         self.assertEqual(metrics, metrics_pd)
-        metrics_user = metrics.convert(kind="user")
         self.assertAlmostEqual(
-            metrics_user['Root Mean Squared Error'], 6.9803059, delta=EPSILON)
+            metrics['Root Mean Squared Error'], 6.9803059, delta=EPSILON)
         self.assertAlmostEqual(
-            metrics_user['R-squared'], 0.2656004, delta=EPSILON)
+            metrics['R-squared'], 0.2656004, delta=EPSILON)
 
 
 class TestTunedModelers(_CommonTesting, unittest.TestCase):
