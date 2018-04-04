@@ -2,6 +2,7 @@ import random
 
 import funcy
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn_pandas.pipeline import TransformerPipeline
 
@@ -88,3 +89,11 @@ def log_seed_on_error(logger, seed=None):
             yield
     except Exception as e:
         logger.exception('Error was thrown using seed {}'.format(seed))
+
+
+def check_frame_equal(*args, **kwargs):
+    try:
+        pd.testing.assert_frame_equal(*args, **kwargs)
+        return True
+    except AssertionError:
+        return False
