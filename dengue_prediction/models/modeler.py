@@ -49,14 +49,17 @@ def create_model(tuned=True):
             'Bad problem type in config.yml: {}'.format(problem_type_str))
 
 
-def get_scorer():
+def get_scorer_from_config():
     config = load_config()
     scorer = funcy.get_in(
         config, ['problem', 'problem_type_details', 'scorer'])
+    return get_scorer(scorer)
 
+
+def get_scorer(scorer_name):
     found = False
     try:
-        scoring = sklearn.metrics.get_scorer(scorer)
+        scoring = sklearn.metrics.get_scorer(scorer_name)
         found = True
     except ValueError:
         pass
@@ -343,9 +346,8 @@ class SelfTuningMixin:
             # do some tuning
             if btb is not None and self.tunables is not None:
 
-                # make scoring driver
-                scorer = get_scorer()
-
+                # make scoring driver using scorer as specified in config
+                scorer = get_scorer_from_config()
                 def score(estimator):
                     scores = cross_val_score(
                         estimator, X, y,
