@@ -1,3 +1,5 @@
+# TODO make singleton classes
+
 class Problem:
     pass
 

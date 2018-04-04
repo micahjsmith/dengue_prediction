@@ -23,7 +23,7 @@ def validate_config(config, schema):
 @funcy.memoize
 def load_config():
     config_fn = PROJECT_PATHS['root'] / 'config.yml'
-    with open(config_fn, 'r') as f:
+    with open(str(config_fn), 'r') as f:
         config = yaml.load(f)
     schema = get_config_schema()
     if validate_config(config, schema):

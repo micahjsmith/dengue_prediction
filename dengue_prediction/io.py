@@ -28,7 +28,7 @@ def _write_tabular_pickle(obj, filepath):
     _, fn, ext = splitext2(filepath)
     _check_ext(ext, '.pkl')
     if isinstance(obj, np.ndarray):
-        with open(filepath, 'wb') as f:
+        with open(str(filepath), 'wb') as f:
             pickle.dump(obj, f)
     elif isinstance(obj, pd.core.frame.NDFrame):
         obj.to_pickle(filepath)
@@ -70,5 +70,5 @@ def _read_tabular_h5(filepath):
 def _read_tabular_pickle(filepath):
     _, fn, ext = splitext2(filepath)
     _check_ext(ext, '.pkl')
-    with open(filepath, 'rb') as f:
+    with open(str(filepath), 'rb') as f:
         return pickle.load(f)
