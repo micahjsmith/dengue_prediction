@@ -122,15 +122,14 @@ class TestModeler(_CommonTesting, unittest.TestCase):
 
     def test_regression_train_test(self):
         metrics, metrics_pd = self._call_method(
-            '_test_problem_type_train_test', ProblemType.REGRESSION)
+            '_test_problem_type_train_test', ProblemTypes.REGRESSION, seed=4)
         self.assertEqual(metrics, metrics_pd)
         metrics = self._prepare_metrics_for_assertions(metrics)
         self.assertAlmostEqual(
-            metrics['Negative Mean Squared Error'],
-            -np.power(6.9803059, 2),
+            metrics['Negative Mean Squared Error'], -34.7071710,
             delta=EPSILON)
         self.assertAlmostEqual(
-            metrics['R-squared'], 0.2656004, delta=EPSILON)
+            metrics['R-squared'], 0.6676197, delta=EPSILON)
 
 
 class TestTunedModelers(_CommonTesting, unittest.TestCase):
