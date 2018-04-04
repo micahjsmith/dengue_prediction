@@ -21,12 +21,12 @@ class ClassificationProblem(Problem):
 
 class BinaryClassificationProblem(ClassificationProblem):
     def is_binary_classification(self):
-        return False
+        return True
 
 
 class MulticlassClassificationProblem(ClassificationProblem):
     def is_multi_classification(self):
-        return False
+        return True
 
 
 class RegressionProblem(Problem):
