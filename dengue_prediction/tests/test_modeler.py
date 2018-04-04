@@ -1,6 +1,7 @@
 import logging
 import unittest
 
+import numpy as np
 import pandas as pd
 import sklearn.datasets
 
@@ -68,7 +69,7 @@ class _CommonTesting:
             metrics_pd = getattr(self, method)(problem_type, self.data_pd)
         return metrics, metrics_pd
 
-    def _prepare_metrics_for_assertions(metrics):
+    def _prepare_metrics_for_assertions(self, metrics):
         return {
             metric['name']: metric['value']
             for metric in metrics
@@ -99,6 +100,7 @@ class TestModeler(_CommonTesting, unittest.TestCase):
         metrics, metrics_pd = self._call_method(
             '_test_problem_type_train_test', ProblemType.CLASSIFICATION)
         self.assertEqual(metrics, metrics_pd)
+        metrics = self._prepare_metrics_for_assertions(metrics)
         self.assertAlmostEqual(
             metrics['Accuracy'], 0.7777777, delta=EPSILON)
         self.assertAlmostEqual(
@@ -112,6 +114,7 @@ class TestModeler(_CommonTesting, unittest.TestCase):
         metrics, metrics_pd = self._call_method(
             '_test_problem_type_cv', ProblemType.REGRESSION)
         self.assertEqual(metrics, metrics_pd)
+        metrics = self._prepare_metrics_for_assertions(metrics)
         self.assertAlmostEqual(
             metrics['Negative Mean Squared Error'], -20.7262935, delta=EPSILON)
         self.assertAlmostEqual(
@@ -121,6 +124,7 @@ class TestModeler(_CommonTesting, unittest.TestCase):
         metrics, metrics_pd = self._call_method(
             '_test_problem_type_train_test', ProblemType.REGRESSION)
         self.assertEqual(metrics, metrics_pd)
+        metrics = self._prepare_metrics_for_assertions(metrics)
         self.assertAlmostEqual(
             metrics['Negative Mean Squared Error'],
             -np.power(6.9803059, 2),

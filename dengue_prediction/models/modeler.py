@@ -188,11 +188,15 @@ class Modeler:
 
         scoring_names = self._get_scoring_names()
         scorers = {
-            s : sklearn.metrics.get_scorer(s)
+            s: sklearn.metrics.get_scorer(s)
             for s in scoring_names
         }
-        result = _multimetric_score(self.estimator, X_te, y_te, scorers)
-        return result
+        multimetric_score_results = _multimetric_score(
+            self.estimator, X_te, y_te, scorers)
+
+        results = self._process_cv_results(
+            multimetric_score_results, filter_testing_keys=False)
+        return results
 
     def cv_score_mean(self, X, y, scorings):
         """Compute mean score across cross validation folds.
@@ -219,26 +223,35 @@ class Modeler:
         else:
             raise NotImplementedError
 
-        all_cv_results = cross_validate(
+        cv_results = cross_validate(
             self.estimator, X, y,
             scoring=scorings, cv=kf, return_train_score=False)
 
         # post-processing
-        cv_results = []
-        for key, val in all_cv_results.items():
-            if key.startswith('test_'):
-                scoring_name = key[len('test_') + 1:]
-                name = scoring_name_to_name(scoring_name)
-                val = np.nanmean(all_cv_results[key])
-                if np.isnan(val):
-                    val = None
-                cv_results.append({
-                    'name': name,
-                    'scoring_name': scoring_name,
-                    'value': val,
-                })
+        results = self._process_cv_results(cv_results)
+        return results
 
-        return cv_results
+    def _process_cv_results(self, cv_results, filter_testing_keys=True):
+        result = []
+        for key, val in cv_results.items():
+            if filter_testing_keys:
+                if key.startswith('test_'):
+                    scoring_name = key[len('test_'):]
+                else:
+                    continue
+            else:
+                scoring_name = key
+            name = scoring_name_to_name(scoring_name)
+            val = np.nanmean(cv_results[key])
+            if np.isnan(val):
+                val = None
+            result.append({
+                'name': name,
+                'scoring_name': scoring_name,
+                'value': val,
+            })
+
+        return result
 
     def _is_classification(self):
         return self.problem_type == ProblemType.CLASSIFICATION
