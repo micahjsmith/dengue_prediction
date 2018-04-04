@@ -153,9 +153,7 @@ class Modeler:
     def compute_metrics_cv(self, X, y, **kwargs):
         """Compute cross-validated metrics.
         Trains this model on data X with labels y.
-        Returns a MetricList with the name, scoring type, and value for each
-        Metric. Note that these values may be numpy floating points, and should
-        be converted prior to insertion in a database.
+        Returns a list of dict with keys name, scoring_name, value.
         Parameters
         ----------
         X : numpy array-like or pd.DataFrame

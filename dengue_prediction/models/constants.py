@@ -1,11 +1,3 @@
-from enum import Enum
-
-
-class MetricComputationApproach(Enum):
-    CV = 1
-    TRAIN_TEST = 2
-
-
 def _make_multiclass(lst):
     return [
         l + '_' + MULTICLASS_METRIC_AGGREGATION
