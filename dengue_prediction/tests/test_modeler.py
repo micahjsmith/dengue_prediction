@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import sklearn.datasets
 
-from dengue_prediction.constants import ProblemType
+from dengue_prediction.constants import ProblemTypes
 from dengue_prediction.models.modeler import (
     DecisionTreeModeler, TunedModeler, TunedRandomForestClassifier,
     TunedRandomForestRegressor)
@@ -24,39 +24,47 @@ class _CommonTesting:
             return_X_y=True)
 
         self.data = {
-            ProblemType.CLASSIFICATION: {
+            ProblemTypes.CLASSIFICATION: {
                 "X": X_classification,
                 "y": y_classification,
             },
-            ProblemType.REGRESSION: {
+            ProblemTypes.REGRESSION: {
                 "X": X_regression,
                 "y": y_regression,
             },
         }
 
         self.data_pd = {
-            ProblemType.CLASSIFICATION: {
+            ProblemTypes.CLASSIFICATION: {
                 "X": pd.DataFrame(X_classification),
                 "y": pd.DataFrame(y_classification),
             },
-            ProblemType.REGRESSION: {
+            ProblemTypes.REGRESSION: {
                 "X": pd.DataFrame(X_regression),
                 "y": pd.DataFrame(y_regression),
             },
         }
 
-    def _test_problem_type_cv(self, problem_type, data):
-        model = self.ModelerClass(problem_type)
+    def _setup_modeler(self, problem_type, data):
         X = data[problem_type]["X"]
         y = data[problem_type]["y"]
-        metrics = model.compute_metrics_cv(X, y)
+        if problem_type.is_classification():
+            k = len(np.unique(y))
+            classification_type = 'multiclass' if k > 2 else 'binary'
+        else:
+            classification_type = None
+        model = self.ModelerClass(
+            problem_type=problem_type,
+            classification_type=classification_type)
+        return model, X, y
 
+    def _test_problem_type_cv(self, problem_type, data):
+        model, X, y = self._setup_modeler(problem_type, data)
+        metrics = model.compute_metrics_cv(X, y)
         return metrics
 
     def _test_problem_type_train_test(self, problem_type, data):
-        model = self.ModelerClass(problem_type)
-        X = data[problem_type]["X"]
-        y = data[problem_type]["y"]
+        model, X, y = self._setup_modeler(problem_type, data)
         n = round(0.7 * len(X))
         metrics = model.compute_metrics_train_test(X, y, n=n)
 
@@ -84,7 +92,7 @@ class TestModeler(_CommonTesting, unittest.TestCase):
 
     def test_classification_cv(self):
         metrics, metrics_pd = self._call_method(
-            '_test_problem_type_cv', ProblemType.CLASSIFICATION)
+            '_test_problem_type_cv', ProblemTypes.CLASSIFICATION)
         self.assertEqual(metrics, metrics_pd)
         metrics = self._prepare_metrics_for_assertions(metrics)
         self.assertAlmostEqual(
@@ -98,7 +106,7 @@ class TestModeler(_CommonTesting, unittest.TestCase):
 
     def test_classification_train_test(self):
         metrics, metrics_pd = self._call_method(
-            '_test_problem_type_train_test', ProblemType.CLASSIFICATION)
+            '_test_problem_type_train_test', ProblemTypes.CLASSIFICATION)
         self.assertEqual(metrics, metrics_pd)
         metrics = self._prepare_metrics_for_assertions(metrics)
         self.assertAlmostEqual(
@@ -112,7 +120,7 @@ class TestModeler(_CommonTesting, unittest.TestCase):
 
     def test_regression_cv(self):
         metrics, metrics_pd = self._call_method(
-            '_test_problem_type_cv', ProblemType.REGRESSION)
+            '_test_problem_type_cv', ProblemTypes.REGRESSION)
         self.assertEqual(metrics, metrics_pd)
         metrics = self._prepare_metrics_for_assertions(metrics)
         self.assertAlmostEqual(
@@ -140,22 +148,22 @@ class TestTunedModelers(_CommonTesting, unittest.TestCase):
 
     def test_classification_cv(self):
         metrics, metrics_pd = self._call_method(
-            '_test_problem_type_cv', ProblemType.CLASSIFICATION, seed=1)
+            '_test_problem_type_cv', ProblemTypes.CLASSIFICATION, seed=1)
         self.assertEqual(metrics, metrics_pd)
 
     def test_classification_train_test(self):
         metrics, metrics_pd = self._call_method(
-            '_test_problem_type_train_test', ProblemType.CLASSIFICATION,
+            '_test_problem_type_train_test', ProblemTypes.CLASSIFICATION,
             seed=2)
         self.assertEqual(metrics, metrics_pd)
 
     def test_regression_cv(self):
         metrics, metrics_pd = self._call_method(
-            '_test_problem_type_cv', ProblemType.REGRESSION, seed=3)
+            '_test_problem_type_cv', ProblemTypes.REGRESSION, seed=3)
 
     def test_regression_train_test(self):
         metrics, metrics_pd = self._call_method(
-            '_test_problem_type_train_test', ProblemType.REGRESSION, seed=4)
+            '_test_problem_type_train_test', ProblemTypes.REGRESSION, seed=4)
         self.assertEqual(metrics, metrics_pd)
 
     def _test_tuned_random_forest_estimator(self, Estimator, problem_type):
@@ -171,8 +179,8 @@ class TestTunedModelers(_CommonTesting, unittest.TestCase):
 
     def test_tuned_random_forest_regressor(self):
         self._test_tuned_random_forest_estimator(
-            TunedRandomForestRegressor, ProblemType.REGRESSION)
+            TunedRandomForestRegressor, ProblemTypes.REGRESSION)
 
     def test_tuned_random_forest_classifier(self):
         self._test_tuned_random_forest_estimator(
-            TunedRandomForestClassifier, ProblemType.CLASSIFICATION)
+            TunedRandomForestClassifier, ProblemTypes.CLASSIFICATION)

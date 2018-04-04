@@ -13,7 +13,7 @@ from sklearn.model_selection._validation import _multimetric_score
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from dengue_prediction.config import load_config
-from dengue_prediction.constants import ProblemType
+from dengue_prediction.constants import ProblemTypes
 from dengue_prediction.exceptions import ConfigurationError
 from dengue_prediction.models import constants
 from dengue_prediction.models.input_type_transforms import (
@@ -277,10 +277,10 @@ class Modeler:
         return result
 
     def _is_classification(self):
-        return self.problem_type == ProblemType.CLASSIFICATION
+        return self.problem_type == ProblemTypes.CLASSIFICATION
 
     def _is_regression(self):
-        return self.problem_type == ProblemType.REGRESSION
+        return self.problem_type == ProblemTypes.REGRESSION
 
     def _get_scoring_names(self):
         """Get scorings for this problem type.
