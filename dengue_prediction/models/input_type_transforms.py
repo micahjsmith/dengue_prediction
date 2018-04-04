@@ -34,6 +34,9 @@ class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, **transform_kwargs):
+        if not hasattr(self, 'original_type_'):
+            raise NotFittedError
+
         if isinstance(X, pd.Series):
             return X.values
             # return X.to_frame().to_records(index=False))
@@ -56,6 +59,9 @@ class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
                     type(X)))
 
     def inverse_transform(self, X, **inverse_transform_kwargs):
+        if not hasattr(self, 'original_type_'):
+            raise NotFittedError
+
         if hasattr(self, 'original_type_') and hasattr(self, 'original_info_'):
             if issubclass(self.original_type_, pd.Series):
                 data = X
@@ -70,10 +76,10 @@ class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
                 columns = self.original_info_['columns']
                 dtypes = self.original_info_['dtypes']
                 df = pd.DataFrame(data=data, index=index,
-                                    columns=columns)
+                                  columns=columns)
                 df = df.astype(dtype=dtypes.to_dict())
                 return df
-            elif issubclass(self.orginal_type_, np.ndarray):
+            elif issubclass(self.original_type_, np.ndarray):
                 # only thing we might have done is change dimensions for 1d/2d
                 if self.original_info_['ndim'] == 1:
                     return X.ravel()

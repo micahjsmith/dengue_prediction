@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 
 from dengue_prediction.models.input_type_transforms import (
-    TargetTypeTransformer, FeatureTypeTransformer
-)
+    FeatureTypeTransformer, TargetTypeTransformer)
 from dengue_prediction.tests.util import check_frame_equal, seeded
+
 
 class TestInputTypeTransforms(unittest.TestCase):
     def test_feature_type_transformer(self):
@@ -25,7 +25,6 @@ class TestInputTypeTransforms(unittest.TestCase):
         self.assertTrue(
             check_frame_equal(x_pd, x_pd_inv)
         )
-
 
     def test_target_type_transformer_binary(self):
         y = np.array([0, 1, 0, 1, 0, 0])
@@ -49,3 +48,5 @@ class TestInputTypeTransforms(unittest.TestCase):
         self.assertEqual(y1.ndim, 2)
         self.assertEqual(y1.shape[1], 3)
         self.assertEqual(y1.shape[0], y.shape[0])
+
+    # TODO check additional dtypes
