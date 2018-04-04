@@ -4,6 +4,7 @@ import funcy
 import yaml
 
 from dengue_prediction import PROJECT_PATHS
+from dengue_prediction.exceptions import ConfigurationError
 
 
 def get_config_schema():
@@ -13,7 +14,10 @@ def get_config_schema():
 
 def validate_config(config, schema):
     # TODO
-    return True
+    if True:
+        return True
+    else:
+        raise ConfigurationError('Bad config for schema.')
 
 
 @funcy.memoize

@@ -106,6 +106,15 @@ def str_to_enum_member(s, E):
     return None
 
 
+def str_to_class_member(s, C):
+    '''Find the member of enum E with name given by string s (ignoring case)'''
+    for member in dir(C):
+        if not (member.startswith('__') and member.endswith('__')):
+            if member == s.upper():
+                return getattr(C, member)
+    return None
+
+
 def spliceext(filepath, s):
     '''Add s into filepath before the extension'''
     root, ext = os.path.splitext(filepath)
