@@ -94,7 +94,7 @@ def scoring_name_to_name(scoring_name):
                 return s[0].upper() + s[1:]
         format = funcy.rcompose(
             lambda s: s.split('_'),
-            upper_first,
+            funcy.partial(map, upper_first),
             lambda l: ' '.join(l),
         )
         return format(scoring_name)
