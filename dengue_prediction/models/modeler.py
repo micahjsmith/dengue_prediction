@@ -398,6 +398,10 @@ class SelfTuningMixin:
                     params = tuner.propose()
                     estimator.set_params(**params)
                     score_ = score(estimator)
+                    logger.debug(
+                        'Iteration {}, params {}, score {}'
+                        .format(i, params, score_)
+                    )
                     tuner.add(params, score_)
 
                 best_params = tuner._best_hyperparams
@@ -405,7 +409,7 @@ class SelfTuningMixin:
                 self.set_params(**best_params)
                 logger.info(
                     'Tuning complete. '
-                    'Cross val score changed from {0:.3f} to {0:.3f}.'
+                    'Cross val score changed from {:0.3f} to {:0.3f}.'
                     .format(original_score, best_score))
             else:
                 logging.warning('Tuning requested, but either btb not '
