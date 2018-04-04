@@ -8,7 +8,7 @@ import sklearn.metrics
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.externals import joblib
 from sklearn.model_selection import (
-    KFold, StratifiedKFold, cross_val_score, cross_validate)
+    KFold, StratifiedKFold, cross_val_score, cross_validate, train_test_split)
 from sklearn.model_selection._validation import _multimetric_score
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
@@ -203,8 +203,8 @@ class Modeler:
 
         X, y = self._format_inputs(X, y)
 
-        X_tr, y_tr = X[:n], y[:n]
-        X_te, y_te = X[n:], y[n:]
+        X_tr, X_te, y_tr, y_te = train_test_split(
+            X, y, train_size=n, test_size=len(y) - n, shuffle=True)
 
         # fit model on entire training set
         self.estimator.fit(X_tr, y_tr)
