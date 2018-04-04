@@ -236,8 +236,17 @@ class Modeler:
 
         X, y = self._format_inputs(X, y)
 
-            kf = StratifiedKFold(shuffle=True, random_state=RANDOM_STATE + 3)
         if self.problem_type.is_classification():
+            if self.problem_type.is_binary_classification():
+                kf = StratifiedKFold(
+                    shuffle=True, random_state=RANDOM_STATE + 3)
+            elif self.problem_type.is_multi_classification():
+                self.target_type_transformer.inverse_transform(y)
+                transformer = self.target_type_transformer
+                kf = StratifiedKFoldMultiClassIndicator(
+                    transformer, shuffle=True, random_state=RANDOM_STATE + 3)
+            else:
+                raise NotImplementedError
         elif self.problem_type.is_regression():
             kf = KFold(shuffle=True, random_state=RANDOM_STATE + 4)
         else:
@@ -437,3 +446,19 @@ class TunedModeler(Modeler):
 
     def _get_default_regressor(self):
         return TunedRandomForestRegressor(random_state=RANDOM_STATE + 2)
+
+
+class StratifiedKFoldMultiClassIndicator(StratifiedKFold):
+    '''
+    Adaptation of StratifiedKFold to support multiclass-indicator format y
+    values. Note that this should not be used for multilabel, multiclass
+    dataself.
+    '''
+
+    def __init__(self, transformer, *args, **kwargs):
+        self.transformer = transformer
+        super().__init__(*args, **kwargs)
+
+    def split(self, X, y, groups=None):
+        y = self.transformer.inverse_transform(y)
+        return super().split(X, y, groups=None)

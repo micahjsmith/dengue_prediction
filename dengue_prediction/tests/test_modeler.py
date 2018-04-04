@@ -4,11 +4,13 @@ import unittest
 import numpy as np
 import pandas as pd
 import sklearn.datasets
+from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import LabelBinarizer
 
 from dengue_prediction.constants import ProblemTypes
 from dengue_prediction.models.modeler import (
-    DecisionTreeModeler, TunedModeler, TunedRandomForestClassifier,
-    TunedRandomForestRegressor)
+    DecisionTreeModeler, StratifiedKFoldMultiClassIndicator, TunedModeler,
+    TunedRandomForestClassifier, TunedRandomForestRegressor)
 from dengue_prediction.tests.util import EPSILON, log_seed_on_error, seeded
 
 logger = logging.getLogger(__name__)
@@ -189,3 +191,22 @@ class TestTunedModelers(_CommonTesting, unittest.TestCase):
     def test_tuned_random_forest_classifier(self):
         self._test_tuned_random_forest_estimator(
             TunedRandomForestClassifier, ProblemTypes.CLASSIFICATION)
+
+
+class TestStratifiedKFoldMultiClassIndicator(unittest.TestCase):
+    def test(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        transformer = LabelBinarizer()
+        ym = transformer.fit_transform(y)
+
+        params = {'random_state': 1}
+        kf = StratifiedKFold(**params)
+        kfm = StratifiedKFoldMultiClassIndicator(transformer, **params)
+
+        kf_folds = kf.split(X, y)
+        kfm_folds = kfm.split(X, ym)
+
+        for (inds_tr_kf, inds_te_kf), (inds_tr_kfm, inds_te_kfm) \
+                in zip(kf_folds, kfm_folds):
+            self.assertTrue(np.array_equal(inds_tr_kf, inds_tr_kfm))
+            self.assertTrue(np.array_equal(inds_te_kf, inds_te_kfm))
