@@ -113,7 +113,7 @@ class TestModeler(_CommonTesting, unittest.TestCase):
             '_test_problem_type_cv', ProblemType.REGRESSION)
         self.assertEqual(metrics, metrics_pd)
         self.assertAlmostEqual(
-            metrics['Root Mean Squared Error'], 4.4761438, delta=EPSILON)
+            metrics['Negative Mean Squared Error'], -20.7262935, delta=EPSILON)
         self.assertAlmostEqual(
             metrics['R-squared'], 0.7393219, delta=EPSILON)
 
@@ -122,7 +122,9 @@ class TestModeler(_CommonTesting, unittest.TestCase):
             '_test_problem_type_train_test', ProblemType.REGRESSION)
         self.assertEqual(metrics, metrics_pd)
         self.assertAlmostEqual(
-            metrics['Root Mean Squared Error'], 6.9803059, delta=EPSILON)
+            metrics['Negative Mean Squared Error'],
+            -np.power(6.9803059, 2),
+            delta=EPSILON)
         self.assertAlmostEqual(
             metrics['R-squared'], 0.2656004, delta=EPSILON)
 

@@ -1,14 +1,17 @@
 from enum import Enum
 
+
 class MetricComputationApproach(Enum):
     CV = 1
     TRAIN_TEST = 2
+
 
 def _make_multiclass(lst):
     return [
         l + '_' + MULTICLASS_METRIC_AGGREGATION
         for l in lst
     ]
+
 
 MULTICLASS_METRIC_AGGREGATION = "micro"
 CLASSIFICATION_SCORING = ['accuracy', 'roc_auc']
@@ -28,7 +31,7 @@ SCORING_NAME_MAPPER = {
     'f1_macro': 'F1 Score (macro-averaged)',
     'f1_weighted': 'F1 Score (weighted average)',
     'f1_samples': 'F1 Score (by multilabel sample)',
-    'neg_log_loss': 'Log Loss',
+    'neg_log_loss': 'Negative Log Loss',
     'precision': 'Precision (Binary)',
     'precision_micro': 'Precision (micro-averaged)',
     'precision_macro': 'Precision (macro-averaged)',
@@ -43,9 +46,9 @@ SCORING_NAME_MAPPER = {
 
     # regression
     'explained_variance': 'Explained Variance',
-    'neg_mean_absolute_error': 'Mean Absolute Error',
-    'neg_mean_squared_error': 'Mean Squared Error',
-    'neg_mean_squared_lod_error': 'Mean Squared Log Error',
-    'neg_median_absolute_error': 'Median Absolute Error',
+    'neg_mean_absolute_error': 'Negative Mean Absolute Error',
+    'neg_mean_squared_error': 'Negative Mean Squared Error',
+    'neg_mean_squared_lod_error': 'Negative Mean Squared Log Error',
+    'neg_median_absolute_error': 'Negative Median Absolute Error',
     'r2': 'R-squared',
 }
