@@ -132,12 +132,18 @@ class Modeler:
                  ):
         self.problem_type = problem_type
         self.scorer = scorer
-        self.classification_type = classification_type
+
+        # just use to adapt problem_type
+        if self.problem_type.is_classification():
+            if classification_type == 'multiclass':
+                self.problem_type = ProblemTypes.MULTI_CLASSIFICATION
+            else:
+                self.problem_type = ProblemTypes.BINARY_CLASSIFICATION
 
         self.estimator = self._get_default_estimator()
         self.feature_type_transformer = FeatureTypeTransformer()
 
-        needs_label_binarizer = (self.classification_type == 'multiclass')
+        needs_label_binarizer = self.problem_type.is_multi_classification()
         self.target_type_transformer = TargetTypeTransformer(
             needs_label_binarizer=needs_label_binarizer)
 
@@ -230,9 +236,9 @@ class Modeler:
 
         X, y = self._format_inputs(X, y)
 
-        if self._is_classification():
             kf = StratifiedKFold(shuffle=True, random_state=RANDOM_STATE + 3)
-        elif self._is_regression():
+        if self.problem_type.is_classification():
+        elif self.problem_type.is_regression():
             kf = KFold(shuffle=True, random_state=RANDOM_STATE + 4)
         else:
             raise NotImplementedError
@@ -267,12 +273,6 @@ class Modeler:
 
         return result
 
-    def _is_classification(self):
-        return self.problem_type == ProblemTypes.CLASSIFICATION
-
-    def _is_regression(self):
-        return self.problem_type == ProblemTypes.REGRESSION
-
     def _get_scoring_names(self):
         """Get scorings for this problem type.
         Returns
@@ -286,9 +286,9 @@ class Modeler:
         # cross_val_score
         # See also
         # http://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
-        if self._is_classification():
+        if self.problem_type.is_classification():
             return constants.CLASSIFICATION_SCORING
-        elif self._is_regression():
+        elif self.problem_type.is_regression():
             return constants.REGRESSION_SCORING
         else:
             raise NotImplementedError
@@ -303,9 +303,9 @@ class Modeler:
         return self.feature_type_transformer.fit_transform(X)
 
     def _get_default_estimator(self):
-        if self._is_classification():
+        if self.problem_type.is_classification():
             return self._get_default_classifier()
-        elif self._is_regression():
+        elif self.problem_type.is_regression():
             return self._get_default_regressor()
         else:
             raise NotImplementedError
