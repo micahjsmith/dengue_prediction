@@ -153,6 +153,11 @@ class TestTunedModelers(_CommonTesting, unittest.TestCase):
         super().setUp()
         self.ModelerClass = TunedModeler
 
+    def _setup_modeler(self, problem_type, data):
+        model, X, y = super()._setup_modeler(problem_type, data)
+        model.tuning_iter = 2
+        return model, X, y
+
     def test_classification_cv(self):
         metrics, metrics_pd = self._call_method(
             '_test_problem_type_cv', ProblemTypes.CLASSIFICATION, seed=1)

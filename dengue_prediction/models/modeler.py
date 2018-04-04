@@ -362,7 +362,7 @@ class SelfTuningMixin:
     @property
     def tuning_iter(self):
         if not hasattr(self, '_tuning_iter'):
-            self._tuning_iter = 3
+            self._tuning_iter = 10
         return self._tuning_iter
 
     @tuning_iter.setter
