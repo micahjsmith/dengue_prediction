@@ -65,18 +65,18 @@ def get_scorer(scorer_name):
         pass
 
     if not found:
-        i = scorer.rfind('.')
+        i = scorer_name.rfind('.')
         if i < 0:
-            raise ValueError('Invalid scorer import path: {}'.format(scorer))
-        module_name = scorer[:i]
-        scorer_name = scorer[i + 1:]
+            raise ValueError(
+                'Invalid scorer import path: {}'.format(scorer_name))
+        module_name, scorer_name_ = scorer_name[:i], scorer_name[i + 1:]
         mod = importlib.import_module(module_name)
-        scoring = getattr(mod, scorer_name)
+        scoring = getattr(mod, scorer_name_)
         found = True
 
     if not found:
         raise ConfigurationError(
-            'Could not get a scorer with configuration {}'.format(scorer))
+            'Could not get a scorer with configuration {}'.format(scorer_name))
 
     return scoring
 
