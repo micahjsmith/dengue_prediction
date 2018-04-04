@@ -1,24 +1,51 @@
 from enum import Enum
 
-
-class ClassificationMetricAgg(Enum):
-    BINARY_METRIC_AGGREGATION = "micro"
-    MULTICLASS_METRIC_AGGREGATION = "micro"
-
-
 class MetricComputationApproach(Enum):
     CV = 1
     TRAIN_TEST = 2
 
+def _make_multiclass(lst):
+    return [
+        l + '_' + MULTICLASS_METRIC_AGGREGATION
+        for l in lst
+    ]
 
-CLASSIFICATION_SCORING = [
-    {"name": "Accuracy", "scoring": "accuracy"},
-    {"name": "Precision", "scoring": "precision"},
-    {"name": "Recall", "scoring": "recall"},
-    {"name": "ROC AUC", "scoring": "roc_auc"},
-]
+MULTICLASS_METRIC_AGGREGATION = "micro"
+CLASSIFICATION_SCORING = ['accuracy', 'roc_auc']
+BINARY_CLASSIFICATION_SCORING = (
+    CLASSIFICATION_SCORING + ['precision', 'recall'])
+MULTICLASS_CLASSIFICATION_SCORING = (
+    CLASSIFICATION_SCORING + _make_multiclass(['precision', 'recall'])
+)
+REGRESSION_SCORING = ['neg_mean_squared_error', 'r2']
 
-REGRESSION_SCORING = [
-    {"name": "Root Mean Squared Error", "scoring": "root_mean_squared_error"},
-    {"name": "R-squared", "scoring": "r2"},
-]
+SCORING_NAME_MAPPER = {
+    # classification
+    'accuracy': 'Accuracy',
+    'average_precision': 'Average Precision',
+    'f1': 'F1 Score (Binary)',
+    'f1_micro': 'F1 Score (micro-averaged)',
+    'f1_macro': 'F1 Score (macro-averaged)',
+    'f1_weighted': 'F1 Score (weighted average)',
+    'f1_samples': 'F1 Score (by multilabel sample)',
+    'neg_log_loss': 'Log Loss',
+    'precision': 'Precision (Binary)',
+    'precision_micro': 'Precision (micro-averaged)',
+    'precision_macro': 'Precision (macro-averaged)',
+    'precision_weighted': 'Precision (weighted average)',
+    'precision_samples': 'Precision (by multilabel sample)',
+    'recall': 'Recall (Binary)',
+    'recall_micro': 'Recall (micro-averaged)',
+    'recall_macro': 'Recall (macro-averaged)',
+    'recall_weighted': 'Recall (weighted average)',
+    'recall_samples': 'Recall (by multilabel sample)',
+    'roc_auc': 'ROC AUC Score',
+
+    # regression
+    'explained_variance': 'Explained Variance',
+    'neg_mean_absolute_error': 'Mean Absolute Error',
+    'neg_mean_squared_error': 'Mean Squared Error',
+    'neg_mean_squared_lod_error': 'Mean Squared Log Error',
+    'neg_median_absolute_error': 'Median Absolute Error',
+    'r2': 'R-squared',
+}

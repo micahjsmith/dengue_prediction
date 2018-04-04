@@ -1,26 +1,23 @@
+import importlib
 import logging
 import os
-import sys
-import traceback
-from collections import defaultdict
 
 import funcy
 import numpy as np
 import sklearn.metrics
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.externals import joblib
-from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score
-from sklearn.preprocessing import label_binarize
+from sklearn.model_selection import (
+    KFold, StratifiedKFold, cross_val_score, cross_validate)
+from sklearn.model_selection._validation import _multimetric_score
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 from dengue_prediction.config import load_config
 from dengue_prediction.constants import ProblemType
 from dengue_prediction.exceptions import ConfigurationError
 from dengue_prediction.models import constants
-from dengue_prediction.models.constants import ClassificationMetricAgg
 from dengue_prediction.models.input_type_transforms import (
     FeatureTypeTransformer, TargetTypeTransformer)
-from dengue_prediction.models.metrics import Metric, MetricList
 from dengue_prediction.util import RANDOM_STATE, str_to_enum_member
 
 try:
@@ -69,7 +66,7 @@ def get_scorer():
         if i < 0:
             raise ValueError('Invalid scorer import path: {}'.format(scorer))
         module_name = scorer[:i]
-        scorer_name = scorer[i+1:]
+        scorer_name = scorer[i + 1:]
         mod = importlib.import_module(module_name)
         scoring = getattr(mod, scorer_name)
         found = True
@@ -79,6 +76,37 @@ def get_scorer():
             'Could not get a scorer with configuration {}'.format(scorer))
 
     return scoring
+
+
+def scoring_name_to_name(scoring_name):
+    mapper = constants.SCORING_NAME_MAPPER
+
+    if scoring_name in mapper:
+        return mapper[scoring_name]
+    else:
+        # default formatting
+        def upper_first(s):
+            if not s:
+                return s
+            elif len(s) == 1:
+                return s.upper()
+            else:
+                return s[0].upper() + s[1:]
+        format = funcy.rcompose(
+            lambda s: s.split('_'),
+            upper_first,
+            lambda l: ' '.join(l),
+        )
+        return format(scoring_name)
+
+
+def name_to_scoring_name(name):
+    mapper = funcy.flip(constants.SCORING_NAME_MAPPER)
+    if name in mapper:
+        return mapper[name]
+    else:
+        # default formatting
+        return '_'.join(name.lower().split(' '))
 
 
 class Modeler:
@@ -113,15 +141,11 @@ class Modeler:
             labels
         """
 
-        scorings, scorings_ = self._get_scorings()
+        scoring_names = self._get_scoring_names()
 
         # compute scores
-        scores = self.cv_score_mean(X, y, scorings_)
-
-        # unpack into MetricList
-        metric_list = self.scores_to_metriclist(scorings, scores)
-
-        return metric_list
+        results = self.cv_score_mean(X, y, scoring_names)
+        return results
 
     def fit(self, X, y, **kwargs):
         X, y = self._format_inputs(X, y)
@@ -147,21 +171,6 @@ class Modeler:
             raise ValueError("Couldn't find model at {}".format(filepath))
         self.estimator = joblib.load(filepath)
 
-    def _compute_metrics_train_test_fitted(self, X, y, classes=None):
-        scorings, scorings_ = self._get_scorings()
-
-        # Determine binary/multiclass classification
-        if classes is None:
-            classes = np.unique(y)
-        params = self._get_params(classes)
-
-        scores = {}
-        for scoring in scorings_:
-            scores[scoring] = self._do_scoring(scoring, params, self.estimator,
-                                               X, y)
-
-        return self.scores_to_metriclist(scorings, scores)
-
     def compute_metrics_train_test(self, X, y, n):
         """Compute metrics on test set.
         """
@@ -174,25 +183,13 @@ class Modeler:
         # fit model on entire training set
         self.estimator.fit(X_tr, y_tr)
 
-        return self._compute_metrics_train_test_fitted(
-            X_te, y_te, classes=np.unique(y))
-
-    def _do_scoring(self, scoring, params, model, X_te, y_te,
-                    failure_value=None):
-        # Make and evaluate predictions. Note that ROC AUC may raise
-        # exception if somehow we only have examples from one class in
-        # a given fold.
-        y_te_transformed = params[scoring]["pred_transformer"](y_te)
-        y_te_pred = params[scoring]["predictor"](model, X_te)
-
-        try:
-            score = params[scoring]["scorer"](y_te_transformed, y_te_pred)
-        except ValueError as e:
-            score = failure_value
-            print(traceback.format_exc(), file=sys.stderr)
-            raise RuntimeError
-
-        return score
+        scoring_names = self._get_scoring_names()
+        scorers = {
+            s : sklearn.metrics.get_scorer(s)
+            for s in scoring_names
+        }
+        result = _multimetric_score(self.estimator, X_te, y_te, scorers)
+        return result
 
     def cv_score_mean(self, X, y, scorings):
         """Compute mean score across cross validation folds.
@@ -212,12 +209,6 @@ class Modeler:
 
         X, y = self._format_inputs(X, y)
 
-        scorings = list(scorings)
-
-        # Determine binary/multiclass classification
-        classes = np.unique(y)
-        params = self._get_params(classes)
-
         if self._is_classification():
             kf = StratifiedKFold(shuffle=True, random_state=RANDOM_STATE + 3)
         elif self._is_regression():
@@ -225,42 +216,26 @@ class Modeler:
         else:
             raise NotImplementedError
 
-        # Split data, train model, and evaluate metric. We fit the model just
-        # once per fold.
-        scoring_outputs = defaultdict(lambda: [])
-        for inds_tr, inds_te in kf.split(X, y):
-            X_tr, X_te = X[inds_tr], X[inds_te]
-            y_tr, y_te = y[inds_tr], y[inds_te]
+        all_cv_results = cross_validate(
+            self.estimator, X, y,
+            scoring=scorings, cv=kf, return_train_score=False)
 
-            self.estimator.fit(X_tr, y_tr)
+        # post-processing
+        cv_results = []
+        for key, val in all_cv_results.items():
+            if key.startswith('test_'):
+                scoring_name = key[len('test_') + 1:]
+                name = scoring_name_to_name(scoring_name)
+                val = np.nanmean(all_cv_results[key])
+                if np.isnan(val):
+                    val = None
+                cv_results.append({
+                    'name': name,
+                    'scoring_name': scoring_name,
+                    'value': val,
+                })
 
-            for scoring in scorings:
-                score = self._do_scoring(scoring, params, self.estimator, X_te,
-                                         y_te, failure_value=np.nan)
-                scoring_outputs[scoring].append(score)
-
-        for scoring in scoring_outputs:
-            score_mean = np.nanmean(scoring_outputs[scoring])
-            if np.isnan(score_mean):
-                score_mean = None
-            scoring_outputs[scoring] = score_mean
-
-        return scoring_outputs
-
-    def scores_to_metriclist(self, scorings, scores):
-        metric_list = MetricList()
-        for v in scorings:
-            name = v["name"]
-            scoring = v["scoring"]
-
-            if scoring in scores:
-                value = scores[scoring]
-            else:
-                value = None
-
-            metric_list.append(Metric(name, scoring, value))
-
-        return metric_list
+        return cv_results
 
     def _is_classification(self):
         return self.problem_type == ProblemType.CLASSIFICATION
@@ -268,86 +243,11 @@ class Modeler:
     def _is_regression(self):
         return self.problem_type == ProblemType.REGRESSION
 
-    def _get_params(self, classes):
-        n_classes = len(classes)
-        is_binary = n_classes == 2
-        if is_binary:
-            metric_aggregation = (
-                ClassificationMetricAgg.BINARY_METRIC_AGGREGATION)
-        else:
-            metric_aggregation = (
-                ClassificationMetricAgg.MULTICLASS_METRIC_AGGREGATION)
-        metric_aggregation = metric_aggregation.value
-
-        # Determine predictor (labels, label probabilities, or values) and
-        # scoring function.
-
-        # predictors
-        def predict(model, X_te):
-            return model.predict(X_te)
-
-        def predict_proba(model, X_te):
-            return model.predict_proba(X_te)
-
-        # transformers
-        def transformer_binarize(y_true):
-            return label_binarize(y_true, classes=classes)
-
-        # scorers
-        # nothing here
-
-        params = {
-            "accuracy": {
-                "predictor": predict,
-                "pred_transformer": funcy.identity,
-                "scorer": sklearn.metrics.accuracy_score,
-            },
-            "precision": {
-                "predictor": predict,
-                "pred_transformer": funcy.identity,
-                "scorer": lambda y_true, y_pred:
-                    sklearn.metrics.precision_score(y_true, y_pred,
-                                                    average=metric_aggregation)
-            },
-            "recall": {
-                "predictor": predict,
-                "pred_transformer": funcy.identity,
-                "scorer": lambda y_true, y_pred:
-                    sklearn.metrics.recall_score(y_true, y_pred,
-                                                 average=metric_aggregation),
-            },
-            "roc_auc": {
-                "predictor": predict if is_binary else predict_proba,
-                "pred_transformer":
-                    funcy.identity if is_binary else transformer_binarize,
-                "scorer": lambda y_true, y_pred:
-                    sklearn.metrics.roc_auc_score(y_true, y_pred,
-                                                  average=metric_aggregation),
-            },
-            "root_mean_squared_error": {
-                "predictor": predict,
-                "pred_transformer": funcy.identity,
-                "scorer": lambda y_true, y_pred:
-                    np.sqrt(sklearn.metrics.mean_squared_error(y_true,
-                                                               y_pred)),
-            },
-            "r2": {
-                "predictor": predict,
-                "pred_transformer": funcy.identity,
-                "scorer": sklearn.metrics.r2_score
-            },
-        }
-
-        return params
-
-    def _get_scorings(self):
+    def _get_scoring_names(self):
         """Get scorings for this problem type.
         Returns
         -------
-        scorings : list of dict
-            Information on metric name and associated "scoring" as defined in
-            sklearn.metrics
-        scorings_ : list
+        scoring_names: list
             List of "scoring" as defined in sklearn.metrics. This is a "utility
             variable" that can be used where we just need the names of the
             scoring functions and not the more complete information.
@@ -357,15 +257,11 @@ class Modeler:
         # See also
         # http://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
         if self._is_classification():
-            scorings = constants.CLASSIFICATION_SCORING
-            scorings_ = [s["scoring"] for s in scorings]
+            return constants.CLASSIFICATION_SCORING
         elif self._is_regression():
-            scorings = constants.REGRESSION_SCORING
-            scorings_ = [s["scoring"] for s in scorings]
+            return constants.REGRESSION_SCORING
         else:
             raise NotImplementedError
-
-        return scorings, scorings_
 
     def _format_inputs(self, X, y):
         return self._format_X(X), self._format_y(y)
@@ -449,9 +345,13 @@ class SelfTuningMixin:
 
                 # make scoring driver
                 scorer = get_scorer()
+
                 def score(estimator):
-                    return np.mean(cross_val_score(
-                        estimator, X, y, scoring=scorer, cv=self.tuning_cv, fit_params=fit_kwargs))
+                    scores = cross_val_score(
+                        estimator, X, y,
+                        scoring=scorer, cv=self.tuning_cv,
+                        fit_params=fit_kwargs)
+                    return np.mean(scores)
 
                 logger.info('Tuning model using BTB GP tuner...')
                 tuner = btb.tuning.gp.GP(self.tunables)
