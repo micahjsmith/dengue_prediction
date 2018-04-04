@@ -121,11 +121,34 @@ class Modeler:
     problem_type : ProblemType
     """
 
-    def __init__(self, problem_type):
+    def __init__(self,
+                 problem_type=None,
+                 scorer=None,
+                 classification_type=None,
+                 ):
         self.problem_type = problem_type
+        self.scorer = scorer
+        self.classification_type = classification_type
+
         self.estimator = self._get_default_estimator()
         self.feature_type_transformer = FeatureTypeTransformer()
         self.target_type_transformer = TargetTypeTransformer()
+
+    @classmethod
+    def from_config(cls):
+        config = load_config()
+        c = funcy.partial(funcy.get_in, config)
+        problem_type = c(['problem', 'problem_type'])
+        scorer = c(['problem', 'problem_type_details', 'scorer'])
+
+        if problem_type == 'classification':
+            classification_type = c(
+                ['problem', 'problem_type_details', 'classification_type'])
+            # TODO more?
+
+        return cls(problem_type=problem_type,
+                   scorer=scorer,
+                   classification_type=classification_type)
 
     def set_estimator(self, estimator):
         self.estimator = estimator
@@ -361,6 +384,7 @@ class SelfTuningMixin:
 
                 # make scoring driver using scorer as specified in config
                 scorer = get_scorer_from_config()
+
                 def score(estimator):
                     scores = cross_val_score(
                         estimator, X, y,
