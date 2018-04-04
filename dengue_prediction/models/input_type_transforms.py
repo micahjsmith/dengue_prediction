@@ -112,7 +112,6 @@ class TargetTypeTransformer(FeatureTypeTransformer):
         return y
 
     def inverse_transform(self, y, **inverse_transform_kwargs):
-        # TODO do we require inverse of ravel?
         if self.needs_label_binarizer:
             y = self.label_binarizer_.inverse_transform(y)
         y = super().inverse_transform(y)
