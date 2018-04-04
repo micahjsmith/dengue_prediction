@@ -137,9 +137,9 @@ class Modeler:
         self.estimator = self._get_default_estimator()
         self.feature_type_transformer = FeatureTypeTransformer()
 
-        needs_label_encoder = self.classification_type == 'multiclass'
+        needs_label_binarizer = (self.classification_type == 'multiclass')
         self.target_type_transformer = TargetTypeTransformer(
-            needs_label_encoder=needs_label_encoder)
+            needs_label_binarizer=needs_label_binarizer)
 
     def set_estimator(self, estimator):
         self.estimator = estimator

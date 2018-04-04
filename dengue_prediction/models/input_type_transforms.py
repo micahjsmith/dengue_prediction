@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelBinarizer
 
 
 class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
@@ -69,8 +69,10 @@ class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
                 index = self.original_info_['index']
                 columns = self.original_info_['columns']
                 dtypes = self.original_info_['dtypes']
-                return pd.DataFrame(data=data, index=index,
-                                    columns=columns, dtypes=dtypes)
+                df = pd.DataFrame(data=data, index=index,
+                                    columns=columns)
+                df = df.astype(dtype=dtypes.to_dict())
+                return df
             elif issubclass(self.orginal_type_, np.ndarray):
                 # only thing we might have done is change dimensions for 1d/2d
                 if self.original_info_['ndim'] == 1:
@@ -84,27 +86,28 @@ class FeatureTypeTransformer(BaseEstimator, TransformerMixin):
 
 
 class TargetTypeTransformer(FeatureTypeTransformer):
-    def __init__(self, needs_label_encoder=False):
+    def __init__(self, needs_label_binarizer=False):
         super().__init__()
-        self.needs_label_encoder = needs_label_encoder
+        self.needs_label_binarizer = needs_label_binarizer
 
     def fit(self, y, **fit_kwargs):
         super().fit(y, **fit_kwargs)
-        if self.needs_label_encoder:
-            self.label_encoder_ = LabelEncoder()
-            self.label_encoder_.fit(y)
+        if self.needs_label_binarizer:
+            self.label_binarizer_ = LabelBinarizer()
+            self.label_binarizer_.fit(y)
         return self
 
     def transform(self, y, **transform_kwargs):
         y = super().transform(y)
-        if self.needs_label_encoder:
-            y = self.label_encoder_.transform(y)
-        y = y.ravel()
+        if self.needs_label_binarizer:
+            y = self.label_binarizer_.transform(y)
+        else:
+            y = y.ravel()
         return y
 
     def inverse_transform(self, y, **inverse_transform_kwargs):
         # TODO do we require inverse of ravel?
-        if self.needs_label_encoder:
-            y = self.label_encoder_.inverse_transform(y)
+        if self.needs_label_binarizer:
+            y = self.label_binarizer_.inverse_transform(y)
         y = super().inverse_transform(y)
         return y
