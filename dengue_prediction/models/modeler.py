@@ -18,7 +18,7 @@ from dengue_prediction.exceptions import ConfigurationError
 from dengue_prediction.models import constants
 from dengue_prediction.models.input_type_transforms import (
     FeatureTypeTransformer, TargetTypeTransformer)
-from dengue_prediction.util import RANDOM_STATE, str_to_enum_member
+from dengue_prediction.util import RANDOM_STATE, str_to_class_member
 
 try:
     import btb
@@ -30,23 +30,27 @@ logger = logging.getLogger(__name__)
 
 
 def create_model(tuned=True):
+    config = load_config()
+    c = funcy.partial(funcy.get_in, config)
+    problem_type_str = c(['problem', 'problem_type'])
+    problem_type = str_to_class_member(problem_type_str, ProblemTypes)
+    scorer = c(['problem', 'problem_type_details', 'scorer'])
+    classification_type = c(
+        ['problem', 'problem_type_details', 'classification_type'],
+        default=None)
+    # TODO more?
+
     if tuned:
         ModelerClass = TunedModeler
     else:
         ModelerClass = Modeler
-    config = load_config()
-    problem_type_str = funcy.get_in(config, ['problem', 'problem_type'])
-    problem_type = str_to_enum_member(problem_type_str, ProblemType)
-    if problem_type is not None:
-        logger.info('Initializing {} modeler...'.format(ModelerClass.__name__))
-        modeler = ModelerClass(problem_type)
-        logger.info(
-            'Initializing {} modeler...DONE'.format(ModelerClass.__name__))
-        return modeler
-    else:
-        # TODO
-        raise RuntimeError(
-            'Bad problem type in config.yml: {}'.format(problem_type_str))
+
+    modeler = ModelerClass(
+        problem_type=problem_type,
+        scorer=scorer,
+        classification_type=classification_type,
+    )
+    return modeler
 
 
 def get_scorer_from_config():
@@ -132,23 +136,10 @@ class Modeler:
 
         self.estimator = self._get_default_estimator()
         self.feature_type_transformer = FeatureTypeTransformer()
-        self.target_type_transformer = TargetTypeTransformer()
 
-    @classmethod
-    def from_config(cls):
-        config = load_config()
-        c = funcy.partial(funcy.get_in, config)
-        problem_type = c(['problem', 'problem_type'])
-        scorer = c(['problem', 'problem_type_details', 'scorer'])
-
-        if problem_type == 'classification':
-            classification_type = c(
-                ['problem', 'problem_type_details', 'classification_type'])
-            # TODO more?
-
-        return cls(problem_type=problem_type,
-                   scorer=scorer,
-                   classification_type=classification_type)
+        needs_label_encoder = self.classification_type == 'multiclass'
+        self.target_type_transformer = TargetTypeTransformer(
+            needs_label_encoder=needs_label_encoder)
 
     def set_estimator(self, estimator):
         self.estimator = estimator

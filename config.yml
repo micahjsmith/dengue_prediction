@@ -6,6 +6,7 @@ problem:
     # - sklearn string http://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
     # - function name, such as dengue_prediction.models.scoring.scorer using make_scorer
     scorer: neg_mean_absolute_error
+    classification_type:
   data:
     train: 'data/raw'
     entities_table_name: dengue_features
