@@ -1,36 +1,8 @@
 import logging
-import os
-import pathlib
 
 import click
 
-from dengue_prediction.features.build_features import build_features_from_dir
-from dengue_prediction.io import write_tabular
-from dengue_prediction.models.train_model import train_model
-
-logger = logging.getLogger(__name__)
-
-
-def _predict_model(model, X_te, y_te):
-    y_te_pred = model.predict(X_te)
-    # TODO add inverse transform
-    # y_te_pred = mapper_y.inverse_transform(y_te_pred)
-    return y_te_pred
-
-
-def predict_model(input_dir):
-    model = train_model()
-    X_te, y_te = build_features_from_dir(input_dir)
-    y_te_pred = _predict_model(model, X_te, y_te)
-    return y_te_pred
-
-
-def save_predictions(y, output_dir):
-    logger.info('Saving predictions...')
-    os.makedirs(output_dir, exist_ok=True)
-    filepath = pathlib.Path(output_dir).joinpath('predictions.pkl')
-    write_tabular(y, filepath)
-    logger.info('Saving predictions...DONE ({})'.format(filepath))
+from dengue_prediction.models.api import predict_model, save_predictions
 
 
 @click.command()
