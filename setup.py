@@ -36,7 +36,7 @@ extras_require = {
 }
 
 dependency_links= [
-    'git+https://github.com/HDI-Project/BTB.git@30cc8d1affea2b37771eb865b9df30dc9d0657e8#egg=btb-0.2.0',
+    'git+https://github.com/micahjsmith/BTB.git@48db0da94a28492220ca666de80e193c50d756f6#egg=btb-0.2.0',
 ]
 
 setup(
