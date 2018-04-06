@@ -55,20 +55,20 @@ class _CommonTesting:
             classification_type = 'multiclass' if k > 2 else 'binary'
         else:
             classification_type = None
-        model = self.ModelerClass(
+        modeler = self.ModelerClass(
             problem_type=problem_type,
             classification_type=classification_type)
-        return model, X, y
+        return modeler, X, y
 
     def _test_problem_type_cv(self, problem_type, data):
-        model, X, y = self._setup_modeler(problem_type, data)
-        metrics = model.compute_metrics_cv(X, y)
+        modeler, X, y = self._setup_modeler(problem_type, data)
+        metrics = modeler.compute_metrics_cv(X, y)
         return metrics
 
     def _test_problem_type_train_test(self, problem_type, data):
-        model, X, y = self._setup_modeler(problem_type, data)
+        modeler, X, y = self._setup_modeler(problem_type, data)
         n = round(0.7 * len(X))
-        metrics = model.compute_metrics_train_test(X, y, n=n)
+        metrics = modeler.compute_metrics_train_test(X, y, n=n)
 
         return metrics
 
@@ -154,9 +154,8 @@ class TestTunedModelers(_CommonTesting, unittest.TestCase):
         self.ModelerClass = TunedModeler
 
     def _setup_modeler(self, problem_type, data):
-        model, X, y = super()._setup_modeler(problem_type, data)
-        model.tuning_iter = 2
-        return model, X, y
+        modeler, X, y = super()._setup_modeler(problem_type, data)
+        return modeler, X, y
 
     def test_classification_cv(self):
         metrics, metrics_pd = self._call_method(
