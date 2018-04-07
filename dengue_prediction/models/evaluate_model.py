@@ -19,6 +19,7 @@ def main(input_dir):
     results = evaluate_model(train_dir=None, test_dir=input_dir)
     print(results)
 
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     main()

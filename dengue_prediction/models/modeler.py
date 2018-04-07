@@ -117,13 +117,13 @@ def name_to_scoring_name(name):
 
 
 class Modeler:
-    """Versatile modeling object.
+    '''Versatile modeling object.
     Handles classification and regression problems and computes variety of
     performance metrics.
     Parameters
     ----------
     problem_type : ProblemType
-    """
+    '''
 
     def __init__(self,
                  problem_type=None,
@@ -175,7 +175,7 @@ class Modeler:
         self.estimator = joblib.load(filepath)
 
     def compute_metrics_cv(self, X, y, **kwargs):
-        """Compute cross-validated metrics.
+        '''Compute cross-validated metrics.
         Trains this model on data X with labels y.
         Returns a list of dict with keys name, scoring_name, value.
         Parameters
@@ -184,7 +184,7 @@ class Modeler:
             data
         y : numpy array-like or pd.DataFrame or pd.DataSeries
             labels
-        """
+        '''
 
         scoring_names = self._get_scoring_names()
 
@@ -219,7 +219,7 @@ class Modeler:
         return self._compute_metrics_train_test(X_tr, y_tr, X_te, y_te)
 
     def cv_score_mean(self, X, y, scorings):
-        """Compute mean score across cross validation folds.
+        '''Compute mean score across cross validation folds.
         Split data and labels into cross validation folds and fit the model for
         each fold. Then, for each scoring type in scorings, compute the score.
         Finally, average the scores across folds. Returns a dictionary mapping
@@ -232,7 +232,7 @@ class Modeler:
             labels
         scorings : list of str
             scoring types
-        """
+        '''
 
         X, y = self._format_inputs(X, y)
 
@@ -283,14 +283,14 @@ class Modeler:
         return result
 
     def _get_scoring_names(self):
-        """Get scorings for this problem type.
+        '''Get scorings for this problem type.
         Returns
         -------
         scoring_names: list
-            List of "scoring" as defined in sklearn.metrics. This is a "utility
-            variable" that can be used where we just need the names of the
+            List of 'scoring' as defined in sklearn.metrics. This is a 'utility
+            variable' that can be used where we just need the names of the
             scoring functions and not the more complete information.
-        """
+        '''
         # scoring_types maps user-readable name to `scoring`, as argument to
         # cross_val_score
         # See also

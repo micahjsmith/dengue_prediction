@@ -36,7 +36,8 @@ def predict_model(test_dir, train_dir=None):
 def evaluate_model(train_dir=None, test_dir=None):
     logger.info('Evaluating model...')
     model = create_model()
-    X_tr, y_tr, mapper_X, mapper_y = build_features_from_dir(train_dir, return_mappers=True)
+    X_tr, y_tr, mapper_X, mapper_y = build_features_from_dir(
+        train_dir, return_mappers=True)
     if test_dir is None:
         # cv evaluation
         results = model.compute_metrics_cv(X_tr, y_tr)
@@ -48,6 +49,6 @@ def evaluate_model(train_dir=None, test_dir=None):
     logger.info('Evaluating model...DONE')
 
     # make results more readable
-    results = [ {'name': d['name'], 'value': d['value']} for d in results]
+    results = [{'name': d['name'], 'value': d['value']} for d in results]
 
     return results

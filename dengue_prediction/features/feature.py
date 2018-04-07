@@ -24,7 +24,7 @@ class RobustTransformerPipeline(TransformerPipeline):
 
 
 def make_robust_transformer_pipeline(*steps):
-    """Construct a RobustTransformerPipeline from the given estimators."""
+    '''Construct a RobustTransformerPipeline from the given estimators.'''
     return RobustTransformerPipeline(_name_estimators(steps))
 
 
