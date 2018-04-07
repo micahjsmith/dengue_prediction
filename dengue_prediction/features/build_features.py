@@ -36,7 +36,8 @@ def build_target(y_df):
     return y, mapper
 
 
-def build_features_from_dir(input_dir):
+def build_features_from_dir(input_dir, return_mappers=False):
+    # TODO allow specification of input dir for train data
     X_df_tr, y_df_tr = load_data()
     X_tr, mapper_X = build_features(X_df_tr)
     y_tr, mapper_y = build_target(y_df_tr)
@@ -53,7 +54,10 @@ def build_features_from_dir(input_dir):
     y = mapper_y.transform(y_df)
     logger.info('Building target...DONE')
 
-    return X, y
+    if return_mappers:
+        return X, y, mapper_X, mapper_y
+    else:
+        return X, y
 
 
 def save_features(X, y, output_dir):

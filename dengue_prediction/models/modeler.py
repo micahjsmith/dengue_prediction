@@ -150,24 +150,6 @@ class Modeler:
     def set_estimator(self, estimator):
         self.estimator = estimator
 
-    def compute_metrics_cv(self, X, y, **kwargs):
-        """Compute cross-validated metrics.
-        Trains this model on data X with labels y.
-        Returns a list of dict with keys name, scoring_name, value.
-        Parameters
-        ----------
-        X : numpy array-like or pd.DataFrame
-            data
-        y : numpy array-like or pd.DataFrame or pd.DataSeries
-            labels
-        """
-
-        scoring_names = self._get_scoring_names()
-
-        # compute scores
-        results = self.cv_score_mean(X, y, scoring_names)
-        return results
-
     def fit(self, X, y, **kwargs):
         X, y = self._format_inputs(X, y)
         self.estimator.fit(X, y, **kwargs)
@@ -191,6 +173,24 @@ class Modeler:
         if not os.path.exists(filepath):
             raise ValueError("Couldn't find model at {}".format(filepath))
         self.estimator = joblib.load(filepath)
+
+    def compute_metrics_cv(self, X, y, **kwargs):
+        """Compute cross-validated metrics.
+        Trains this model on data X with labels y.
+        Returns a list of dict with keys name, scoring_name, value.
+        Parameters
+        ----------
+        X : numpy array-like or pd.DataFrame
+            data
+        y : numpy array-like or pd.DataFrame or pd.DataSeries
+            labels
+        """
+
+        scoring_names = self._get_scoring_names()
+
+        # compute scores
+        results = self.cv_score_mean(X, y, scoring_names)
+        return results
 
     def compute_metrics_train_test(self, X, y, n):
         """Compute metrics on test set.
@@ -394,6 +394,11 @@ class SelfTuningMixin:
                 tuner = btb.tuning.gp.GP(self.tunables)
                 estimator = self._get_parent_instance()
                 original_score = score(estimator)
+                # TODO: this leads to an error because default value of
+                # max_depth for RF is `None`
+                # params = funcy.project(
+                #     estimator.get_params(), [t[0] for t in self.tunables])
+                # tuner.add(params, original_score)
                 for i in range(self.tuning_iter):
                     params = tuner.propose()
                     estimator.set_params(**params)

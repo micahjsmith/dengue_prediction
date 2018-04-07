@@ -2,7 +2,8 @@ import logging
 
 import click
 
-from dengue_prediction.models.api import save_model, train_model
+from dengue_prediction.io import save_model
+from dengue_prediction.models.api import train_model
 
 
 @click.command()
