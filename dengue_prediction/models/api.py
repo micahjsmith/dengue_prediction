@@ -31,3 +31,23 @@ def predict_model(test_dir, train_dir=None):
     # y_te_pred = mapper_y.inverse_transform(y_te_pred)
     logger.info('Making predictions...DONE')
     return y_te_pred
+
+
+def evaluate_model(train_dir=None, test_dir=None):
+    logger.info('Evaluating model...')
+    model = create_model()
+    X_tr, y_tr, mapper_X, mapper_y = build_features_from_dir(train_dir, return_mappers=True)
+    if test_dir is None:
+        # cv evaluation
+        results = model.compute_metrics_cv(X_tr, y_tr)
+    else:
+        # train-test evaluation
+        X_te, y_te, mapper_X, mapper_y = build_features_from_dir(
+            test_dir, return_mappers=True)
+        results = model.compute_metrics_train_test(X_tr, y_tr, X_te, y_te)
+    logger.info('Evaluating model...DONE')
+
+    # make results more readable
+    results = [ {'name': d['name'], 'value': d['value']} for d in results]
+
+    return results
