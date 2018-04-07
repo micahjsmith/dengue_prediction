@@ -9,6 +9,8 @@ from dengue_prediction.features.transformers import (
     IdentityTransformer, LagImputer, NamedFramer, NullFiller, NullIndicator,
     SimpleFunctionTransformer, SingleLagger)
 
+from dengue_prediction.features.contrib import user_123
+
 
 def get_feature_transformations():
     features = []
@@ -137,14 +139,8 @@ def get_feature_transformations():
     # one-hot encoding of year
     features.append(
         Feature(
-            input='week_start_date',
-            transformer=[
-                SimpleFunctionTransformer(
-                    lambda ser: pd.to_datetime(ser).dt.year
-                ),
-                NamedFramer(name='week_start_date'),
-                category_encoders.OneHotEncoder(cols=['week_start_date']),
-            ]
+            input=user_123.input,
+            transformer=user_123.transformer,
         )
     )
 
