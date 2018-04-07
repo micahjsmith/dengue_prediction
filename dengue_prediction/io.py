@@ -1,3 +1,6 @@
+import logging
+import os
+import pathlib
 import pickle
 
 import h5py
@@ -5,6 +8,8 @@ import numpy as np
 import pandas as pd
 
 from dengue_prediction.util import splitext2
+
+logger = logging.getLogger(__name__)
 
 
 def _check_ext(ext, expected):
@@ -72,3 +77,19 @@ def _read_tabular_pickle(filepath):
     _check_ext(ext, '.pkl')
     with open(str(filepath), 'rb') as f:
         return pickle.load(f)
+
+
+def save_model(model, output_dir):
+    logger.info('Saving model...')
+    os.makedirs(output_dir, exist_ok=True)
+    filepath = pathlib.Path(output_dir).joinpath('model.pkl')
+    model.dump(filepath)
+    logger.info('Saving model...DONE ({})'.format(filepath))
+
+
+def save_predictions(y, output_dir):
+    logger.info('Saving predictions...')
+    os.makedirs(output_dir, exist_ok=True)
+    filepath = pathlib.Path(output_dir).joinpath('predictions.pkl')
+    write_tabular(y, filepath)
+    logger.info('Saving predictions...DONE ({})'.format(filepath))
