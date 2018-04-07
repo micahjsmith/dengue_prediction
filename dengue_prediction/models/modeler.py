@@ -192,14 +192,10 @@ class Modeler:
         results = self.cv_score_mean(X, y, scoring_names)
         return results
 
-    def compute_metrics_train_test(self, X, y, n):
-        """Compute metrics on test set.
-        """
-
-        X, y = self._format_inputs(X, y)
-
-        X_tr, X_te, y_tr, y_te = train_test_split(
-            X, y, train_size=n, test_size=len(y) - n, shuffle=True)
+    def _compute_metrics_train_test(self, X_tr, y_tr, X_te, y_te):
+        '''Compute metrics on test set, given entire train-test split'''
+        X_tr, y_tr = self._format_inputs(X_tr, y_tr)
+        X_te, y_te = self._format_inputs(X_te, y_te)
 
         # fit model on entire training set
         self.estimator.fit(X_tr, y_tr)
@@ -215,6 +211,12 @@ class Modeler:
         results = self._process_cv_results(
             multimetric_score_results, filter_testing_keys=False)
         return results
+
+    def compute_metrics_train_test(self, X, y, n):
+        '''Compute metrics on test set, doing train-test split on inputs'''
+        X_tr, X_te, y_tr, y_te = train_test_split(
+            X, y, train_size=n, test_size=len(y) - n, shuffle=True)
+        return self._compute_metrics_train_test(X_tr, y_tr, X_te, y_te)
 
     def cv_score_mean(self, X, y, scorings):
         """Compute mean score across cross validation folds.

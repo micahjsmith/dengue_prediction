@@ -44,7 +44,7 @@ def evaluate_model(train_dir=None, test_dir=None):
         # train-test evaluation
         X_te, y_te, mapper_X, mapper_y = build_features_from_dir(
             test_dir, return_mappers=True)
-        results = model.compute_metrics_train_test(X_tr, y_tr, X_te, y_te)
+        results = model._compute_metrics_train_test(X_tr, y_tr, X_te, y_te)
     logger.info('Evaluating model...DONE')
 
     # make results more readable
