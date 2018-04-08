@@ -107,27 +107,9 @@ def get_contrib_features(contrib):
                     'Failed to import anything useful from module {modname}'
                     .format(modname=modname))
 
-    features.append(
-        Feature(
-            input='ndvi_ne',
-            transformer=[
-                LagImputer(groupby_kwargs={'level': 'city'}),
-                sklearn.preprocessing.Imputer(),
-                sklearn.preprocessing.StandardScaler(),
-            ]
-        )
-    )
 
-    features.append(
-        Feature(
-            input='ndvi_nw',
-            transformer=[
-                LagImputer(groupby_kwargs={'level': 'city'}),
-                sklearn.preprocessing.Imputer(),
-                sklearn.preprocessing.StandardScaler(),
-            ]
-        )
-    )
+def get_feature_transformations():
+    features = []
 
     features.append(
         Feature(
@@ -228,13 +210,6 @@ def get_contrib_features(contrib):
         )
     )
 
-    # one-hot encoding of year
-    features.append(
-        Feature(
-            input=user_123.input,
-            transformer=user_123.transformer,
-        )
-    )
     # add contributed features
     features.extend(get_contrib_features(dengue_prediction.features.contrib))
 

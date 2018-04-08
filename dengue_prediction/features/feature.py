@@ -64,10 +64,12 @@ def make_robust_transformer(transformer):
 
 class Feature:
     def __init__(self, input, transformer,
+                 source=None,
                  name=None, description=None, output=None,
                  options={}):
         self.input = input
         self.name = name
+        self.source = source
         self.description = description
         self.output = output
         self.options = options

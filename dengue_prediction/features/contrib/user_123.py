@@ -1,11 +1,13 @@
 import category_encoders
 import pandas as pd
 
-from dengue_prediction.features.feature import Feature
-from dengue_prediction.features.transformers import SimpleFunctionTransformer, NamedFramer
+from dengue_prediction.features.transformers import (
+    NamedFramer, SimpleFunctionTransformer)
 
-input='week_start_date'
-transformer=[
+# one-hot encoding of year
+
+input = 'week_start_date'
+transformer = [
     SimpleFunctionTransformer(
         lambda ser: pd.to_datetime(ser).dt.year
     ),
