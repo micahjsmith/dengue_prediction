@@ -84,6 +84,7 @@ class Feature:
 
 
 def check(func):
+    '''Evaluate func, returning T if no errors and F if AssertionError'''
     @funcy.wraps(func)
     def wrapped(*args, **kwargs):
         try:
@@ -102,7 +103,11 @@ class FeatureValidator:
         self.y = y
 
     @check
-    def input_types(self, feature):
+    def is_feature(self, feature):
+        assert isinstance(feature, Feature)
+
+    @check
+    def has_correct_input_type(self, feature):
         '''Check that `input` is a string or iterable of string'''
         input = feature.input
         is_str = funcy.isa(str)
@@ -111,19 +116,19 @@ class FeatureValidator:
         assert is_str(input) or is_nested_str(input)
 
     @check
-    def transformer_interface(self, feature):
+    def has_transformer_interface(self, feature):
         assert hasattr(feature.transformer, 'fit')
         assert hasattr(feature.transformer, 'transform')
 
     @check
-    def fit(self, feature):
+    def can_fit(self, feature):
         try:
             feature.transformer.fit(self.X, self.y)
         except Exception:
             raise AssertionError
 
     @check
-    def transform(self, feature):
+    def can_transform(self, feature):
         try:
             feature.transformer.fit(self.X, self.y)
             feature.transformer.transform(self.X)
@@ -131,27 +136,20 @@ class FeatureValidator:
             raise AssertionError
 
     @check
-    def fit_transform(self, feature):
+    def can_fit_transform(self, feature):
         try:
             feature.transformer.fit_transform(self.X, self.y)
         except Exception:
             raise AssertionError
 
     @check
-    def transform_output_dimensions(self, feature):
+    def has_correct_output_dimensions(self, feature):
         try:
             X = feature.transformer.fit_transform(self.X, self.y)
         except Exception:
             raise AssertionError
 
         assert self.X.shape[0] == X.shape[0]
-
-    @check
-    def can_copy(self, feature):
-        try:
-            copy.copy(feature)
-        except Exception:
-            raise AssertionError
 
     @check
     def can_deepcopy(self, feature):
@@ -169,15 +167,11 @@ class FeatureValidator:
 
     def validate(self, feature):
         failures = []
-        failed = False
+        result = True
         for check, name in self.get_all_checks():
             success = check(feature)
             if not success:
-                failed = True
+                result = False
                 failures.append(name)
 
-        if failed:
-            # display failures
-            return False
-        else:
-            return True
+        return result, failures

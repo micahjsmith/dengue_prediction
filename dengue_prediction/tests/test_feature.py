@@ -4,10 +4,12 @@ import funcy
 import numpy as np
 import pandas as pd
 import sklearn.preprocessing
+from sklearn.base import BaseEstimator, TransformerMixin
 
 from dengue_prediction.features.feature import (
     Feature, FeatureValidator, make_robust_transformer)
-from dengue_prediction.features.transformers import IdentityTransformer
+from dengue_prediction.features.transformers import (
+    IdentityTransformer, NoFitMixin)
 from dengue_prediction.tests.util import (
     FragileTransformer, FragileTransformerPipeline)
 from dengue_prediction.util import asarray2d
@@ -172,13 +174,61 @@ class TestFeatureValidator(unittest.TestCase):
         )
 
         validator = FeatureValidator(self.X, self.y)
-        self.assertTrue(validator.validate(feature))
+        result, failures = validator.validate(feature)
+        self.assertTrue(result)
+        self.assertEqual(len(failures), 0)
 
-    def test_bad_feature(self):
+    def test_bad_feature_input(self):
+        # bad input
         feature = Feature(
             input=3,
             transformer=sklearn.preprocessing.Imputer(),
         )
-
         validator = FeatureValidator(self.X, self.y)
-        self.assertFalse(validator.validate(feature))
+        result, failures = validator.validate(feature)
+        self.assertFalse(result)
+        self.assertIn('has_correct_input_type', failures)
+
+    def test_bad_feature_transform_errors(self):
+        # transformer throws errors
+        feature = Feature(
+            input='size',
+            transformer=FragileTransformer(
+                (lambda x: True, ), (RuntimeError, ))
+        )
+        validator = FeatureValidator(self.X, self.y)
+        result, failures = validator.validate(feature)
+        self.assertFalse(result)
+        self.assertIn('can_transform', failures)
+
+    def test_bad_feature_wrong_transform_length(self):
+        class _WrongLengthTransformer(
+                BaseEstimator, NoFitMixin, TransformerMixin):
+            def transform(self, X, **transform_kwargs):
+                new_shape = list(X.shape)
+                new_shape[0] += 1
+                output = np.arange(np.prod(new_shape)).reshape(new_shape)
+                return output
+
+        # doesn't return correct length
+        feature = Feature(
+            input='size',
+            transformer=_WrongLengthTransformer(),
+        )
+        validator = FeatureValidator(self.X, self.y)
+        result, failures = validator.validate(feature)
+        self.assertFalse(result)
+        self.assertIn('has_correct_output_dimensions', failures)
+
+    def test_bad_feature_deepcopy_fails(self):
+        class _CopyFailsTransformer(IdentityTransformer):
+            def __deepcopy__(self):
+                raise RuntimeError
+        feature = Feature(
+            input='size',
+            transformer=_CopyFailsTransformer(),
+        )
+        validator = FeatureValidator(self.X, self.y)
+        result, failures = validator.validate(feature)
+        self.assertFalse(result)
+        self.assertIn('can_deepcopy', failures)
