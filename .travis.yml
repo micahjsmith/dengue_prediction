@@ -5,4 +5,18 @@ python:
   - 3.5
   - 3.4
 install: pip install tox-travis
-script: tox
+script:
+  # if it is *not* a PR
+  - |
+    if [ "${TRAVIS_PULL_REQUEST}" = "false" ];
+    then
+        tox
+    fi
+  # if it *is* a PR
+  - |
+    if [ "${TRAVIS_PULL_REQUEST}" != "false" ];
+    then
+        tox
+        echo "In pull request ${TRAVIS_PULL_REQUEST}"
+        # TODO something else
+    fi
