@@ -1,0 +1,12 @@
+import sklearn.preprocessing
+
+from dengue_prediction.features.transformers import LagImputer, SingleLagger
+
+groupby_kwargs = {'level': ['city', 'weekofyear']}
+
+input = 'reanalysis_max_air_temp_k'
+transformer = [
+    LagImputer(groupby_kwargs=groupby_kwargs),
+    SingleLagger(1, groupby_kwargs=groupby_kwargs),
+    sklearn.preprocessing.Imputer(),
+]
