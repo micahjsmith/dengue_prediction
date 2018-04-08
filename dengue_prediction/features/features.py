@@ -55,7 +55,7 @@ def import_contrib_feature_from_components(importer, modname):
     feature = Feature(
         input=required_vars['input'],
         transformer=required_vars['transformer'],
-        # source=modname,
+        source=modname,
         **optional_vars)
     return feature
 
@@ -90,18 +90,18 @@ def get_contrib_features(contrib):
                 .format(modname=modname))
             continue
 
-        # case 2: file has at last `input` and `transformer` defined
+        # case 2: file defines `features` variable
         try:
-            yield import_contrib_feature_from_components(
+            features = import_contrib_feature_from_collection(
                 importer, modname)
+            for feature in features:
+                yield feature
         except ImportError:
 
-            # case 3: file defines `features` variable
+            # case 3: file has at last `input` and `transformer` defined
             try:
-                features = import_contrib_feature_from_collection(
+                yield import_contrib_feature_from_components(
                     importer, modname)
-                for feature in features:
-                    yield feature
             except ImportError:
                 logging.debug(
                     'Failed to import anything useful from module {modname}'
