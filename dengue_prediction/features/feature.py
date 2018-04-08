@@ -1,3 +1,4 @@
+import copy
 import logging
 import traceback
 
@@ -96,18 +97,87 @@ def check(func):
 
 class FeatureValidator:
 
+    def __init__(self, X, y):
+        self.X = X
+        self.y = y
+
     @check
-    def transformer_interface(self, transformer):
-        assert hasattr(transformer, 'fit')
-        assert hasattr(transformer, 'transform')
+    def input_types(self, feature):
+        '''Check that `input` is a string or iterable of string'''
+        input = feature.input
+        is_str = funcy.isa(str)
+        is_nested_str = funcy.all_fn(
+            funcy.iterable, lambda x: all(map(is_str, x)))
+        assert is_str(input) or is_nested_str(input)
+
+    @check
+    def transformer_interface(self, feature):
+        assert hasattr(feature.transformer, 'fit')
+        assert hasattr(feature.transformer, 'transform')
+
+    @check
+    def fit(self, feature):
+        try:
+            feature.transformer.fit(self.X, self.y)
+        except Exception:
+            raise AssertionError
+
+    @check
+    def transform(self, feature):
+        try:
+            feature.transformer.fit(self.X, self.y)
+            feature.transformer.transform(self.X)
+        except Exception:
+            raise AssertionError
+
+    @check
+    def fit_transform(self, feature):
+        try:
+            feature.transformer.fit_transform(self.X, self.y)
+        except Exception:
+            raise AssertionError
+
+    @check
+    def transform_output_dimensions(self, feature):
+        try:
+            X = feature.transformer.fit_transform(self.X, self.y)
+        except Exception:
+            raise AssertionError
+
+        assert self.X.shape[0] == X.shape[0]
+
+    @check
+    def can_copy(self, feature):
+        try:
+            copy.copy(feature)
+        except Exception:
+            raise AssertionError
+
+    @check
+    def can_deepcopy(self, feature):
+        try:
+            copy.deepcopy(feature)
+        except Exception:
+            raise AssertionError
 
     def get_all_checks(self):
-        for method in self.__dir__():
+        for method_name in self.__dir__():
+            method = getattr(self, method_name)
             if hasattr(method, 'is_check') and method.is_check:
-                name = method.__name__[1:]
+                name = method.__name__
                 yield (method, name)
 
-    def validate_transformer(self, transformer):
+    def validate(self, feature):
+        failures = []
+        failed = False
         for check, name in self.get_all_checks():
-            pass
-        return True
+            success = check(feature)
+            if not success:
+                failed = True
+                failures.append(name)
+
+        if failed:
+            # display failures
+            return False
+        else:
+            return True
