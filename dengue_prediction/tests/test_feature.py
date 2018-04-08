@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 import sklearn.preprocessing
 
-from dengue_prediction.features.feature import Feature, make_robust_transformer
+from dengue_prediction.features.feature import (
+    Feature, FeatureValidator, make_robust_transformer)
 from dengue_prediction.features.transformers import IdentityTransformer
 from dengue_prediction.tests.util import (
     FragileTransformer, FragileTransformerPipeline)
@@ -151,4 +152,33 @@ class TestFeature(unittest.TestCase):
 
 
 class TestFeatureValidator(unittest.TestCase):
-    pass
+    def setUp(self):
+        self.df = pd.DataFrame(
+            data={
+                'country': ['USA', 'USA', 'Canada', 'Japan'],
+                'year': [2001, 2002, 2001, 2002],
+                'size': [np.nan, -11, 12, 0.0],
+                'strength': [18, 110, np.nan, 101],
+                'happy': [False, True, False, False]
+            }
+        ).set_index(['country', 'year'])
+        self.X = self.df[['size', 'strength']]
+        self.y = self.df[['happy']]
+
+    def test_good_feature(self):
+        feature = Feature(
+            input='size',
+            transformer=sklearn.preprocessing.Imputer(),
+        )
+
+        validator = FeatureValidator(self.X, self.y)
+        self.assertTrue(validator.validate(feature))
+
+    def test_bad_feature(self):
+        feature = Feature(
+            input=3,
+            transformer=sklearn.preprocessing.Imputer(),
+        )
+
+        validator = FeatureValidator(self.X, self.y)
+        self.assertFalse(validator.validate(feature))
