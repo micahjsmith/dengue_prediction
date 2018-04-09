@@ -1,6 +1,6 @@
 import sklearn.preprocessing
 
-from dengue_prediction.feature.feature import Feature
+from fhub_core.feature import Feature
 from dengue_prediction.features.transformers import LagImputer
 
 features = [

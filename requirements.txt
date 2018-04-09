@@ -3,6 +3,7 @@ Sphinx
 awscli
 python-dotenv>=0.5.1
 category_encoders
+fhub_core
 funcy
 numpy
 pandas

@@ -14,6 +14,7 @@ with open('HISTORY.md') as history_file:
 requirements = [
     'btb',
     'category_encoders',
+    'fhub_core',
     'funcy',
     'numpy',
     'pandas',

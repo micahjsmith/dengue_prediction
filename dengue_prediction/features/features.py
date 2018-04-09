@@ -7,7 +7,7 @@ import sklearn.decomposition
 import sklearn.preprocessing
 
 import dengue_prediction.features.contrib
-from dengue_prediction.features.feature import Feature
+from fhub_core.feature import Feature
 from dengue_prediction.features.transformers import (
     IdentityTransformer, LagImputer, NullFiller, NullIndicator,
     SimpleFunctionTransformer, SingleLagger)
