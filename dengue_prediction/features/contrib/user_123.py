@@ -1,8 +1,6 @@
 import category_encoders
 import pandas as pd
-
-from dengue_prediction.features.transformers import (
-    NamedFramer, SimpleFunctionTransformer)
+from fhub_transformers import NamedFramer, SimpleFunctionTransformer
 
 # one-hot encoding of year
 

@@ -8,9 +8,9 @@ import sklearn.preprocessing
 
 import dengue_prediction.features.contrib
 from fhub_core.feature import Feature
-from dengue_prediction.features.transformers import (
-    IdentityTransformer, LagImputer, NullFiller, NullIndicator,
-    SimpleFunctionTransformer, SingleLagger)
+from fhub_transformers import IdentityTransformer, SimpleFunctionTransformer
+from fhub_transformers.nans import lagImputer, NullFiller, NullIndicator
+from fhub_transformers.ts import SingleLagger
 
 logger = logging.getLogger(__name__)
 

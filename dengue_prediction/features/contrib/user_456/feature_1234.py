@@ -1,6 +1,6 @@
 import sklearn.preprocessing
 
-from dengue_prediction.features.transformers import LagImputer
+from fhub_transformers.nans import LagImputer
 
 input = 'ndvi_ne'
 transformer = [

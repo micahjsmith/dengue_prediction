@@ -1,6 +1,6 @@
 import sklearn.preprocessing
-
-from dengue_prediction.features.transformers import LagImputer, SingleLagger
+from fhub_transformers.ts import SingleLagger
+from fhub_transformers.nans import LagImputer
 
 groupby_kwargs = {'level': ['city', 'weekofyear']}
 
