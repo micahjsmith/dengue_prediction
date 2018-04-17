@@ -8,104 +8,12 @@ import sklearn.preprocessing
 
 import dengue_prediction.features.contrib
 from fhub_core.feature import Feature
+from fhub_core.contrib import get_contrib_features
 from fhub_transformers import IdentityTransformer, SimpleFunctionTransformer
-from fhub_transformers.nans import lagImputer, NullFiller, NullIndicator
+from fhub_transformers.missing import LagImputer, NullFiller, NullIndicator
 from fhub_transformers.ts import SingleLagger
 
 logger = logging.getLogger(__name__)
-
-
-def _import_names_from_module(importer, modname, required, optional):
-    mod = importer.find_module(modname).load_module(modname)
-
-    msg = funcy.partial(
-        'Required variable {varname} not found in module {modname}'
-        .format, modname=modname)
-
-    # required vars
-    if required:
-        required_vars = {}
-        if isinstance(required, str):
-            required = [required]
-        for varname in required:
-            if hasattr(mod, varname):
-                required_vars[varname] = getattr(mod, varname)
-            else:
-                raise ImportError(msg(varname=varname))
-    else:
-        required_vars = None
-
-    # optional vars
-    if optional:
-        if isinstance(optional, str):
-            optional = [optional]
-        optional_vars = {k: getattr(mod, k)
-                         for k in optional if hasattr(mod, k)}
-    else:
-        optional_vars = None
-
-    return required_vars, optional_vars
-
-
-def import_contrib_feature_from_components(importer, modname):
-    required = ['input', 'transformer']
-    optional = ['name', 'description', 'output', 'options']
-    required_vars, optional_vars = _import_names_from_module(
-        importer, modname, required, optional)
-    feature = Feature(
-        input=required_vars['input'],
-        transformer=required_vars['transformer'],
-        source=modname,
-        **optional_vars)
-    return feature
-
-
-def import_contrib_feature_from_collection(importer, modname):
-    required = 'features'
-    optional = None
-    required_vars, _ = _import_names_from_module(
-        importer, modname, required, optional)
-    features = required_vars['features']
-    return features
-
-
-def get_contrib_features(contrib):
-
-    def onerror(pkgname):
-        logging.error(pkgname)
-
-    for importer, modname, _ in pkgutil.walk_packages(
-            path=contrib.__path__,
-            prefix=contrib.__name__ + '.',
-            onerror=onerror
-    ):
-        logging.debug(
-            'Importing contributed feature from module {modname}'
-            .format(modname=modname))
-
-        # case 1: file is __init__.py
-        if '__init__' in modname:
-            logging.debug(
-                'Skipping module {modname}: it is an __init__'
-                .format(modname=modname))
-            continue
-
-        # case 2: file defines `features` variable
-        try:
-            features = import_contrib_feature_from_collection(
-                importer, modname)
-            for feature in features:
-                yield feature
-        except ImportError:
-
-            # case 3: file has at last `input` and `transformer` defined
-            try:
-                yield import_contrib_feature_from_components(
-                    importer, modname)
-            except ImportError:
-                logging.debug(
-                    'Failed to import anything useful from module {modname}'
-                    .format(modname=modname))
 
 
 def get_feature_transformations():

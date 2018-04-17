@@ -1,6 +1,6 @@
 import sklearn.preprocessing
 from fhub_transformers.ts import SingleLagger
-from fhub_transformers.nans import LagImputer
+from fhub_transformers.missing import LagImputer
 
 groupby_kwargs = {'level': ['city', 'weekofyear']}
 

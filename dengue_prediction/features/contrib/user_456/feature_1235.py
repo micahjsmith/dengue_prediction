@@ -1,7 +1,7 @@
 import sklearn.preprocessing
 
 from fhub_core.feature import Feature
-from from fhub_transformers.ts import LagImputer
+from fhub_transformers.missing import LagImputer
 
 features = [
     Feature(
