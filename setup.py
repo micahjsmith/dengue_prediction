@@ -18,7 +18,8 @@ requirements = [
     'fhub_transformers>=0.2.4',
     'funcy',
     'numpy',
-    'pandas',
+    'pandas;python_version>="3.5"',  # hack
+    'pandas<0.21;python_version<"3.5"',  # hack
     'scikit_learn',
     'sklearn_pandas',
 ]
