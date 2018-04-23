@@ -11,6 +11,7 @@ problem:
     train: 'data/raw'
     entities_table_name: dengue_features
     target_table_name: dengue_labels
+  reference_branch: master
 
 tables:
   -
