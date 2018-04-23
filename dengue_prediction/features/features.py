@@ -1,17 +1,15 @@
 import logging
-import pkgutil
 
-import funcy
 import numpy as np
 import sklearn.decomposition
 import sklearn.preprocessing
-
-import dengue_prediction.features.contrib
-from fhub_core.feature import Feature
 from fhub_core.contrib import get_contrib_features
+from fhub_core.feature import Feature
 from fhub_transformers import IdentityTransformer, SimpleFunctionTransformer
 from fhub_transformers.missing import LagImputer, NullFiller, NullIndicator
 from fhub_transformers.ts import SingleLagger
+
+import dengue_prediction.features.contrib
 
 logger = logging.getLogger(__name__)
 

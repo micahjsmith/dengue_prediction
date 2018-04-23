@@ -1,5 +1,4 @@
 import sklearn.preprocessing
-
 from fhub_transformers.missing import LagImputer
 
 input = 'ndvi_ne'
