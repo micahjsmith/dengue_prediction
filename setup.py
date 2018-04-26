@@ -17,6 +17,7 @@ requirements = [
     'fhub_core>=0.2.2',
     'fhub_transformers>=0.2.4',
     'funcy',
+    'gitpython',
     'numpy',
     'pandas;python_version>="3.5"',  # hack
     'pandas<0.21;python_version<"3.5"',  # hack

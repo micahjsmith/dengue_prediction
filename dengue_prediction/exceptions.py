@@ -1,6 +1,10 @@
-class BaseModelingError(Exception):
+class Error(Exception):
     pass
 
 
-class ConfigurationError(BaseModelingError):
+class ConfigurationError(Error):
+    pass
+
+
+class GitError(Error):
     pass

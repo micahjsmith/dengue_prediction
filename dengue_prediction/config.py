@@ -1,6 +1,7 @@
 import pathlib
 
 import funcy
+import git
 import yaml
 
 from dengue_prediction import PROJECT_PATHS
@@ -20,7 +21,6 @@ def validate_config(config, schema):
         raise ConfigurationError('Bad config for schema.')
 
 
-@funcy.memoize
 def load_config():
     config_fn = PROJECT_PATHS['root'] / 'config.yml'
     with open(str(config_fn), 'r') as f:
@@ -31,6 +31,11 @@ def load_config():
     else:
         # TODO
         raise RuntimeError
+
+
+def load_repo():
+    repo = git.Repo(str(PROJECT_PATHS['root']))
+    return repo
 
 
 def get_table_config(table_name):
