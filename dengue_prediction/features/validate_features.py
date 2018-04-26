@@ -71,7 +71,8 @@ def validate_by_sha(sha):
 def get_file_changes_by_pr_num(pr_num):
     # check that pr has been fetched and there is a local copy
     fetch_pr(pr_num)
-    get_file_changes_by_ref_name()
+    pr_info = PullRequestInfo(pr_num)
+    return get_file_changes_by_ref_name(pr_info.local_ref_name)
 
 
 def get_file_changes_by_ref_name(ref_name):
@@ -164,17 +165,17 @@ class PullRequestInfo:
 
     @property
     def local_ref_name(self):
-        '''Shorthand name of local ref as 'pull/1' '''
+        '''Shorthand name of local ref, e.g. 'pull/1' '''
         return 'pull/{pr_num}'.format(pr_num=self.pr_num)
 
     @property
     def local_rev_name(self):
-        '''Full name of revision as 'refs/heads/pull/1' '''
+        '''Full name of revision, e.g. 'refs/heads/pull/1' '''
         return 'refs/heads/pull/{pr_num}'.format(pr_num=self.pr_num)
 
     @property
     def remote_ref_name(self):
-        '''Full name of remote ref (e.g. on GitHub) as 'refs/pull/1/head' '''
+        '''Full name of remote ref (as on GitHub), e.g. 'refs/pull/1/head' '''
         return 'refs/pull/{pr_num}/head'.format(pr_num=self.pr_num)
 
 
@@ -192,9 +193,10 @@ def relpath_to_modname(relpath):
     if parts[-1] == '__init__.py':
         parts = parts[:-1]
     elif parts[-1].endswith('.py'):
-        parts = parts[:-1] + [parts[-1].replace('.py', '')]
+        parts = list(parts)
+        parts[-1] = parts[-1].replace('.py', '')
     else:
-        raise ValueError('Cannot convert a non py file to a modname')
+        raise ValueError('Cannot convert a non-python file to a modname')
 
     return '.'.join(parts)
 
