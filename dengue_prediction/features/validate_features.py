@@ -9,7 +9,7 @@ from git.exc import GitCommandError
 
 from dengue_prediction.config import load_config, load_repo
 from dengue_prediction.data.make_dataset import load_data
-from dengue_prediction.exceptions import GitError
+from dengue_prediction.exceptions import GitError, UnexpectedFileError
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 def validate_feature_file(file):
-    mod = import_module_from_relpath(file)
+    try:
+        mod = import_module_from_relpath(file)
+    except UnexpectedFileError:
+        # TODO mark failure
+        return False
+
     features = get_contrib_features(mod)
 
     # todo get small subset
@@ -196,7 +201,10 @@ def relpath_to_modname(relpath):
         parts = list(parts)
         parts[-1] = parts[-1].replace('.py', '')
     else:
-        raise ValueError('Cannot convert a non-python file to a modname')
+        msg = 'Cannot convert a non-python file to a modname'
+        msg_detail = 'The relpath given is: {}'.format(relpath)
+        logger.error(msg + '\n' + msg_detail)
+        raise UnexpectedFileError(msg)
 
     return '.'.join(parts)
 

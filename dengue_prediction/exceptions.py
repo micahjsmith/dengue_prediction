@@ -8,3 +8,7 @@ class ConfigurationError(Error):
 
 class GitError(Error):
     pass
+
+
+class UnexpectedFileError(Error):
+    pass
