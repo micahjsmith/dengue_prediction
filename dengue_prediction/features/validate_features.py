@@ -75,7 +75,9 @@ def validate_by_sha(sha):
 
 def get_file_changes_by_pr_num(pr_num):
     # check that pr has been fetched and there is a local copy
-    fetch_pr(pr_num)
+    # fetch_pr(pr_num)
+    # TODO for now, assume we are on the appropriate branch
+
     pr_info = PullRequestInfo(pr_num)
     return get_file_changes_by_ref_name(pr_info.local_ref_name)
 
