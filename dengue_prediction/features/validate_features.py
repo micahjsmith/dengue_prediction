@@ -20,17 +20,8 @@ def subsample_data_for_validation(X_df_tr, y_df_tr):
     # TODO:
     return X_df_tr, y_df_tr
 
-def validate_feature_file(file):
-    try:
-        logger.info('Attempting to validate changes in {file}'
-                    .format(file=file))
-        mod = import_module_from_relpath(file)
-    except UnexpectedFileError:
-        # TODO mark failure
-        return False
 
-    features = get_contrib_features(mod)
-
+def validate_features(features):
     # get small subset
     X_df_tr, y_df_tr = load_data()
     X_df_tr, y_df_tr = subsample_data_for_validation(X_df_tr, y_df_tr)
@@ -50,6 +41,19 @@ def validate_feature_file(file):
             overall_result = False
 
     return overall_result
+
+
+def validate_feature_file(file):
+    try:
+        logger.info('Attempting to validate changes in {file}'
+                    .format(file=file))
+        mod = import_module_from_relpath(file)
+    except UnexpectedFileError:
+        # TODO mark failure
+        return False
+
+    features = get_contrib_features(mod)
+    return validate_features(features)
 
 
 def validate_feature_file_list(file_list):
