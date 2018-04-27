@@ -22,6 +22,8 @@ def subsample_data_for_validation(X_df_tr, y_df_tr):
 
 def validate_feature_file(file):
     try:
+        logger.info('Attempting to validate changes in {file}'
+                    .format(file=file))
         mod = import_module_from_relpath(file)
     except UnexpectedFileError:
         # TODO mark failure
