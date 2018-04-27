@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 # drivers for validating features in file or list of files
 
 
+def subsample_data_for_validation(X_df_tr, y_df_tr):
+    # TODO:
+    return X_df_tr, y_df_tr
+
 def validate_feature_file(file):
     try:
         mod = import_module_from_relpath(file)
@@ -25,8 +29,11 @@ def validate_feature_file(file):
 
     features = get_contrib_features(mod)
 
-    # todo get small subset
+    # get small subset
     X_df_tr, y_df_tr = load_data()
+    X_df_tr, y_df_tr = subsample_data_for_validation(X_df_tr, y_df_tr)
+
+    # validate
     validator = FeatureValidator(X_df_tr, y_df_tr)
     overall_result = True
     for feature in features:
