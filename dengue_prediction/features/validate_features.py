@@ -2,9 +2,11 @@ import importlib
 import logging
 import pathlib
 
+import funcy
 from fhub_core.contrib import get_contrib_features
 from fhub_core.feature import FeatureValidator
 
+from dengue_prediction import PROJECT_ROOT
 from dengue_prediction.config import cg, load_repo
 from dengue_prediction.data.make_dataset import load_data
 from dengue_prediction.exceptions import UnexpectedFileChangeInPullRequestError
@@ -36,24 +38,66 @@ class PullRequestFeatureValidator:
 
         # may be set by other methods
         self.file_changes = None
+        self.file_changes_admissible = None
+        self.file_changes_inadmissible = None
 
-    def get_file_changes(self):
+        self.features = None
+
+    def collect_file_changes(self):
         from_rev = get_reference_branch_ref_name()
         to_rev = self.pr_info.local_rev_name
         file_changes = get_file_changes_by_revision(from_rev, to_rev)
         self.file_changes = file_changes
 
-    def validate_feature_file(self, file):
-        try:
-            logger.info('Attempting to validate changes in {file}'
-                        .format(file=file))
-            mod = import_module_from_relpath(file)
-        except UnexpectedFileChangeInPullRequestError:
-            # TODO mark failure
-            return False
+    def categorize_file_changes(self):
+        '''Partition file changes into admissible and inadmissible changes'''
+        if self.file_changes is None:
+            raise ValueError('File changes have not been collected.')
 
-        features = get_contrib_features(mod)
-        return validate_features(features)
+        # admissible:
+        # - within contrib subdirectory
+        # - is a .py file
+        # - TODO: is a .txt file
+        # - is an addition
+        # inadmissible:
+        # - otherwise (wrong directory, wrong filetype, wrong modification
+        #   type)
+        def within_contrib_subdirectory(file):
+            contrib_modname = cg('contrib', 'module_name')
+            contrib_relpath = modname_to_relpath(contrib_modname)
+            return contrib_relpath in pathlib.Path(file).parents
+
+        def is_appropriate_filetype(file):
+            return file.endswith('.py')
+
+        def is_appropriate_modification_type(modification_type):
+            # TODO
+            # return modification_type == 'A'
+            return True
+        is_admissible = funcy.all_fn(
+            within_contrib_subdirectory, is_appropriate_filetype,
+            is_appropriate_modification_type)
+
+        for file in self.file_changes:
+            if is_admissible(file):
+                self.file_changes_admissible.append(file)
+            else:
+                self.file_changes_inadmissible.append(file)
+
+    def collect_features(self):
+        if self.file_changes_admissible is None:
+            raise ValueError('File changes have not been collected.')
+
+        self.features = []
+        for file in self.file_changes_admissible:
+            try:
+                mod = import_module_from_relpath(file)
+            except ImportError:
+                # TODO allow txt
+                continue
+
+            features = get_contrib_features(mod)
+            self.features.extend(features)
 
     def validate(self):
         # check that we are *on* this PR's branch
@@ -63,15 +107,15 @@ class PullRequestFeatureValidator:
             raise NotImplementedError(
                 'Must validate PR while on that PR\'s branch')
 
-        # collect file changes
-        self.get_file_changes()
+        # collect
+        self.collect_file_changes()
+        self.categorize_file_changes()
+        self.collect_features()
 
-        # collect features
-        # TODO
-
+        # validate
         overall_result = True
-        for file in self.file_changes:
-            result = self.validate_feature_file(file)
+        for feature in self.features:
+            result = validate_features([feature])
             if result is False:
                 overall_result = False
 
@@ -173,10 +217,30 @@ def relpath_to_modname(relpath):
     return '.'.join(parts)
 
 
+def modname_to_relpath(modname):
+    '''Convert module name to relative path
+
+    Example:
+        >>> modname_to_relpath('dengue_prediction.features')
+        'dengue_prediction/features/__init__.py'
+
+    '''
+    parts = modname.split('.')
+    relpath = pathlib.Path('.').joinpath(*parts)
+    if PROJECT_ROOT.joinpath(relpath).is_dir():
+        relpath = relpath.joinpath('__init__.py')
+    else:
+        relpath = relpath + '.py'
+    return str(relpath)
+
+
 def import_module_from_relpath(file):
     modname = relpath_to_modname(file)
-    mod = importlib.import_module(modname)
-    return mod
+    return import_module_from_modname(modname)
+
+
+def import_module_from_modname(name):
+    return importlib.import_module(name)
 
 
 # producing nice output after validation is complete
