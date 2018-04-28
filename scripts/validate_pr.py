@@ -6,7 +6,8 @@ import sys
 import click
 
 import dengue_prediction.features.travis as travis
-from dengue_prediction.features.validate_features import validate_by_pr_num
+from dengue_prediction.features.validate_features import (
+    PullRequestFeatureValidator )
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,8 @@ def main(pr_num=None):
             logger.info('Detected PR {}'.format(pr_num))
 
     logger.info('Validating PR {}...'.format(pr_num))
-    result = validate_by_pr_num(pr_num)
+    validator = PullRequestFeatureValidator(pr_num)
+    result = validator.validate()
     if result is True:
         return RETVAL_VALID
     else:

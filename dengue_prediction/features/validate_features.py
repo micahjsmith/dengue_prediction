@@ -2,16 +2,47 @@ import importlib
 import logging
 import pathlib
 
-import git
 from fhub_core.contrib import get_contrib_features
 from fhub_core.feature import FeatureValidator
-from git.exc import GitCommandError
 
 from dengue_prediction.config import load_config, load_repo
 from dengue_prediction.data.make_dataset import load_data
-from dengue_prediction.exceptions import GitError, UnexpectedFileChangeInPullRequestError
+from dengue_prediction.exceptions import UnexpectedFileChangeInPullRequestError
 
 logger = logging.getLogger(__name__)
+
+
+class HeadInfo:
+    def __init__(self):
+        repo = load_repo()
+        self.head = repo.head
+
+    @property
+    def path(self):
+        return self.head.ref.path
+
+
+class PullRequestFeatureValidator:
+    def __init__(self, pr_num):
+        self.pr_num = pr_num
+        self.pr_info = PullRequestInfo(self.pr_num)
+        self.head_info = HeadInfo()
+
+    def get_file_changes(self):
+        from_rev = get_reference_branch_ref_name()
+        to_rev = self.pr_info.local_rev_name
+        return get_file_changes_by_revision(from_rev, to_rev)
+
+    def validate(self):
+        # check that we are *on* this PR's branch
+        expected_ref = self.pr_info.local_rev_name
+        current_ref = self.head_info.path
+        if expected_ref != current_ref:
+            raise NotImplementedError(
+                'Must validate PR while on that PR\'s branch')
+
+        file_changes = self.get_file_changes()
+        return validate_feature_file_list(file_changes)
 
 
 def subsample_data_for_validation(X_df_tr, y_df_tr):
@@ -63,42 +94,16 @@ def validate_feature_file_list(file_list):
 
     return overall_result
 
-def validate_by_pr_num(pr_num):
-    # check that we are *on* this PR, otherwise not implemented
-    pr_info = PullRequestInfo(pr_num)
-    expected_branch = pr_info.local_rev_name
-    current_branch = get_current_ref_path()
-    if not expected_branch == current_branch:
-        raise NotImplementedError('Must validate PR while on that branch')
 
-    file_changes = get_file_changes_by_pr_num(pr_num)
-    return validate_feature_file_list(file_changes)
-
-
-def get_file_changes_by_pr_num(pr_num):
-    pr_info = PullRequestInfo(pr_num)
-    return get_file_changes_by_ref_name(pr_info.local_ref_name)
-
-
-def get_file_changes_by_ref_name(ref_name):
-    # just check that head is valid
-    repo = load_repo()
-    if ref_name not in repo.refs:
-        raise ValueError('Invalid ref: {ref_name}'.format(ref_name=ref_name))
-
-    return get_file_changes_by_revision(ref_name)
-
-
-def get_file_changes_by_revision(revision):
-    '''Get file changes between reference branch and specified revision
+def get_file_changes_by_revision(from_revision, to_revision):
+    '''Get file changes between two revisions
 
     For details on specifying revisions, see
 
         git help revisions
     '''
-    reference_ref_name = get_reference_branch_ref_name()
-    diff_str = '{from_}..{to}'.format(
-        from_=reference_ref_name, to=revision)
+    diff_str = '{from_revision}..{to_revision}'.format(
+        from_revision=from_revision, to_revision=to_revision)
     return get_file_changes_by_diff_str(diff_str)
 
 
@@ -113,11 +118,6 @@ def get_reference_branch_ref_name():
     config = load_config()
     reference_branch = config['problem']['reference_branch']
     return reference_branch
-
-
-def get_current_ref_path():
-    repo = load_repo()
-    return repo.head.ref.path
 
 
 class PullRequestInfo:
