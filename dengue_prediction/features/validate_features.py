@@ -44,15 +44,24 @@ class PullRequestFeatureValidator:
         self.features = None
 
     def collect_file_changes(self):
+        logger.info('Collecting file changes...')
+
         from_rev = get_reference_branch_ref_name()
         to_rev = self.pr_info.local_rev_name
         file_changes = get_file_changes_by_revision(from_rev, to_rev)
         self.file_changes = file_changes
 
+        # log results
+        for i, file in enumerate(self.file_changes):
+            logger.debug('File {i}: {file}'.format(i=i, file=file))
+        logger.info('Collected {} files'.format(len(self.file_changes)))
+
     def categorize_file_changes(self):
         '''Partition file changes into admissible and inadmissible changes'''
         if self.file_changes is None:
             raise ValueError('File changes have not been collected.')
+
+        logger.info('Categorizing file changes...')
 
         self.file_changes_admissible = []
         self.file_changes_inadmissible = []
@@ -84,23 +93,36 @@ class PullRequestFeatureValidator:
         for file in self.file_changes:
             if is_admissible(file):
                 self.file_changes_admissible.append(file)
+                logger.debug(
+                    'Categorized {file} as ADMISSIBLE'.format(file=file))
             else:
                 self.file_changes_inadmissible.append(file)
+                logger.debug(
+                    'Categorized {file} as INADMISSIBLE'.format(file=file))
+
+        logger.info('Admitted {} files and rejected {} files'.format(
+            len(self.file_changes_admissible),
+            len(self.file_changes_inadmissible)))
 
     def collect_features(self):
         if self.file_changes_admissible is None:
             raise ValueError('File changes have not been collected.')
+
+        logger.info('Collecting features...')
 
         self.features = []
         for file in self.file_changes_admissible:
             try:
                 mod = import_module_from_relpath(file)
             except ImportError:
-                # TODO allow txt
+                logger.exception(
+                    'Failed to import module from {}'.format(file))
                 continue
 
             features = get_contrib_features(mod)
             self.features.extend(features)
+
+        logger.info('Collected {} features'.format(len(self.features)))
 
     def validate(self):
         # check that we are *on* this PR's branch
