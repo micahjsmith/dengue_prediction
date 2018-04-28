@@ -5,7 +5,7 @@ import pathlib
 from fhub_core.contrib import get_contrib_features
 from fhub_core.feature import FeatureValidator
 
-from dengue_prediction.config import load_config, load_repo
+from dengue_prediction.config import cg, load_repo
 from dengue_prediction.data.make_dataset import load_data
 from dengue_prediction.exceptions import UnexpectedFileChangeInPullRequestError
 
@@ -127,8 +127,7 @@ def get_file_changes_by_diff_str(diff_str):
 # utils
 
 def get_reference_branch_ref_name():
-    config = load_config()
-    reference_branch = config['problem']['reference_branch']
+    reference_branch = cg('contrib', 'reference_branch')
     return reference_branch
 
 

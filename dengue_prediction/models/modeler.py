@@ -12,7 +12,7 @@ from sklearn.model_selection import (
 from sklearn.model_selection._validation import _multimetric_score
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
-from dengue_prediction.config import load_config
+from dengue_prediction.config import cg
 from dengue_prediction.constants import ProblemTypes
 from dengue_prediction.exceptions import ConfigurationError
 from dengue_prediction.models import constants
@@ -30,15 +30,11 @@ logger = logging.getLogger(__name__)
 
 
 def create_model(tuned=True):
-    config = load_config()
-    c = funcy.partial(funcy.get_in, config)
-    problem_type_str = c(['problem', 'problem_type'])
+    problem_type_str = cg('problem', 'problem_type')
     problem_type = str_to_class_member(problem_type_str, ProblemTypes)
-    scorer = c(['problem', 'problem_type_details', 'scorer'])
-    classification_type = c(
-        ['problem', 'problem_type_details', 'classification_type'],
-        default=None)
-    # TODO more?
+    scorer = cg('problem', 'problem_type_details', 'scorer')
+    classification_type = cg(
+        'problem', 'problem_type_details', 'classification_type')
 
     if tuned:
         ModelerClass = TunedModeler
@@ -54,9 +50,7 @@ def create_model(tuned=True):
 
 
 def get_scorer_from_config():
-    config = load_config()
-    scorer = funcy.get_in(
-        config, ['problem', 'problem_type_details', 'scorer'])
+    scorer = cg('problem', 'problem_type_details', 'scorer')
     return get_scorer(scorer)
 
 

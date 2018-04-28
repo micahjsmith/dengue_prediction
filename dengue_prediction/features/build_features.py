@@ -4,7 +4,7 @@ import os
 import click
 import sklearn_pandas
 
-from dengue_prediction.config import get_table_abspath, load_config
+from dengue_prediction.config import cg, get_table_abspath
 from dengue_prediction.data.make_dataset import load_data
 from dengue_prediction.features.features import (
     get_feature_transformations, get_target_transformations)
@@ -75,13 +75,12 @@ def save_features(X, y, output_dir):
         fn = replaceext(fn, '.' + filetype)
         return fn
 
-    config = load_config()
-    entities_table_name = config['problem']['data']['entities_table_name']
+    entities_table_name = cg('data', 'entities_table_name')
     fn_X = namer(entities_table_name)
     write_tabular(X, fn_X)
     logger.info('Saved featurized entities to {}'.format(fn_X))
 
-    target_table_name = config['problem']['data']['target_table_name']
+    target_table_name = cg('data', 'target_table_name')
     fn_y = namer(target_table_name)
     write_tabular(y, fn_y)
     logger.info('Saved transformed target to {}'.format(fn_y))
