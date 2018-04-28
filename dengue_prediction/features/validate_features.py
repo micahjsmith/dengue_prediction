@@ -13,11 +13,9 @@ from dengue_prediction.exceptions import GitError, UnexpectedFileChangeInPullReq
 
 logger = logging.getLogger(__name__)
 
-# drivers for validating features in file or list of files
-
 
 def subsample_data_for_validation(X_df_tr, y_df_tr):
-    # TODO:
+    # TODO
     return X_df_tr, y_df_tr
 
 
@@ -65,31 +63,12 @@ def validate_feature_file_list(file_list):
 
     return overall_result
 
-# drivers for evaluating entire project by head name, SHA, or PR num
-
-
 def validate_by_pr_num(pr_num):
     file_changes = get_file_changes_by_pr_num(pr_num)
     return validate_feature_file_list(file_changes)
 
 
-def validate_by_ref_name(ref_name):
-    file_changes = get_file_changes_by_ref_name(ref_name)
-    return validate_feature_file_list(file_changes)
-
-
-def validate_by_sha(sha):
-    file_changes = get_file_changes_by_sha(sha)
-    return validate_feature_file_list(file_changes)
-
-# get file changes compared to some reference branch
-
-
 def get_file_changes_by_pr_num(pr_num):
-    # check that pr has been fetched and there is a local copy
-    # fetch_pr(pr_num)
-    # TODO for now, assume we are on the appropriate branch
-
     pr_info = PullRequestInfo(pr_num)
     return get_file_changes_by_ref_name(pr_info.local_ref_name)
 
@@ -101,10 +80,6 @@ def get_file_changes_by_ref_name(ref_name):
         raise ValueError('Invalid ref: {ref_name}'.format(ref_name=ref_name))
 
     return get_file_changes_by_revision(ref_name)
-
-
-def get_file_changes_by_sha(sha):
-    return get_file_changes_by_revision(sha)
 
 
 def get_file_changes_by_revision(revision):
@@ -127,82 +102,34 @@ def get_file_changes_by_diff_str(diff_str):
 
 # utils
 
-def get_reference_branch_sha():
-    reference_branch = get_reference_branch_ref_name()
-    return get_sha_for_ref_name(reference_branch)
-
-
 def get_reference_branch_ref_name():
     config = load_config()
     reference_branch = config['problem']['reference_branch']
     return reference_branch
 
 
-def get_sha_for_ref_name(ref_name):
-    repo = load_repo()
-    heads = repo.heads
-    if ref_name in heads:
-        return heads[ref_name].commit.hexsha
-    else:
-        raise ValueError(
-            'Ref name {ref_name} not found in refs'
-            .format(ref_name=ref_name))
-
-
-def get_sha_for_pr_num(pr_num):
-    try:
-        fetchinfo = fetch_pr(pr_num)
-        return fetchinfo.commit.hexsha
-    except (GitCommandError, GitError):
-        raise ValueError('Could not fetch PR #{pr_num}')
-
-
-def fetch_pr(pr_num):
-    config = load_config()
-    reference_remote = config['problem']['reference_remote']
-    repo = load_repo()
-    remote = repo.remote(name=reference_remote)
-    # note: without a 'src:dest' refspec, a `FetchInfo` object is returned, but
-    # is sufficient to get the sha
-    pr_info = PullRequestInfo(pr_num)
-    refspec = '{remote}:{local}'.format(
-        remote=pr_info.remote_ref_name,
-        local=pr_info.local_ref_name)
-    fetchinfo = remote.fetch(refspec=refspec)
-    if len(fetchinfo) == 1:
-        fetchinfo = fetchinfo[0]
-        return fetchinfo
-    else:
-        raise GitError(
-            'Unexpectedly returned {n} git.remote.FetchInfo items'
-            .format(n=len(fetchinfo)))
-
-
 class PullRequestInfo:
     def __init__(self, pr_num):
         self.pr_num = pr_num
 
+    def _format(self, str):
+        return str.format(pr_num=self.pr_num)
+
     @property
     def local_ref_name(self):
         '''Shorthand name of local ref, e.g. 'pull/1' '''
-        return 'pull/{pr_num}'.format(pr_num=self.pr_num)
+        return self._format('pull/{pr_num}')
 
     @property
     def local_rev_name(self):
         '''Full name of revision, e.g. 'refs/heads/pull/1' '''
-        return 'refs/heads/pull/{pr_num}'.format(pr_num=self.pr_num)
+        return self._format('refs/heads/pull/{pr_num}')
 
     @property
     def remote_ref_name(self):
         '''Full name of remote ref (as on GitHub), e.g. 'refs/pull/1/head' '''
-        return 'refs/pull/{pr_num}/head'.format(pr_num=self.pr_num)
+        return self._format('refs/pull/{pr_num}/head')
 
-
-def delete_local_copy_of_pr(pr_num):
-    repo = load_repo()
-    pr_info = PullRequestInfo(pr_num)
-    path = pr_info.local_rev_name
-    git.refs.Reference.delete(repo, path)
 
 # util for importing modules
 
