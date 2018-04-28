@@ -54,6 +54,9 @@ class PullRequestFeatureValidator:
         if self.file_changes is None:
             raise ValueError('File changes have not been collected.')
 
+        self.file_changes_admissible = []
+        self.file_changes_inadmissible = []
+
         # admissible:
         # - within contrib subdirectory
         # - is a .py file
