@@ -76,8 +76,9 @@ class PullRequestFeatureValidator:
         #   type)
         def within_contrib_subdirectory(file):
             contrib_modname = cg('contrib', 'module_name')
-            contrib_relpath = modname_to_relpath(contrib_modname)
-            return contrib_relpath in pathlib.Path(file).parents
+            contrib_relpath = modname_to_relpath(
+                contrib_modname, add_init=False)
+            return pathlib.Path(contrib_relpath) in pathlib.Path(file).parents
 
         def is_appropriate_filetype(file):
             return file.endswith('.py')
@@ -86,6 +87,7 @@ class PullRequestFeatureValidator:
             # TODO
             # return modification_type == 'A'
             return True
+            
         is_admissible = funcy.all_fn(
             within_contrib_subdirectory, is_appropriate_filetype,
             is_appropriate_modification_type)
@@ -242,7 +244,7 @@ def relpath_to_modname(relpath):
     return '.'.join(parts)
 
 
-def modname_to_relpath(modname):
+def modname_to_relpath(modname, add_init=True):
     '''Convert module name to relative path
 
     Example:
@@ -253,7 +255,8 @@ def modname_to_relpath(modname):
     parts = modname.split('.')
     relpath = pathlib.Path('.').joinpath(*parts)
     if PROJECT_ROOT.joinpath(relpath).is_dir():
-        relpath = relpath.joinpath('__init__.py')
+        if add_init:
+            relpath = relpath.joinpath('__init__.py')
     else:
         relpath = relpath + '.py'
     return str(relpath)
