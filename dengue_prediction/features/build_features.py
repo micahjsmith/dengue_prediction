@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def make_mapper_from_features(features):
     return sklearn_pandas.DataFrameMapper([
-        t.as_sklearn_pandas_tuple() for t in features
+        t.as_input_transformer_tuple() for t in features
     ], input_df=True)
 
 
