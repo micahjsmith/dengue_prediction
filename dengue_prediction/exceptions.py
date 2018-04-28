@@ -10,5 +10,5 @@ class GitError(Error):
     pass
 
 
-class UnexpectedFileError(Error):
+class UnexpectedFileChangeInPullRequestError(Error):
     pass
