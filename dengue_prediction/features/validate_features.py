@@ -19,19 +19,41 @@ class HeadInfo:
 
     @property
     def path(self):
+
         return self.head.ref.path
 
 
 class PullRequestFeatureValidator:
     def __init__(self, pr_num):
+        '''Validate the features introduced in a proposed pull request
+
+        Args:
+            pr_num (str): Pull request number
+        '''
         self.pr_num = pr_num
         self.pr_info = PullRequestInfo(self.pr_num)
         self.head_info = HeadInfo()
 
+        # may be set by other methods
+        self.file_changes = None
+
     def get_file_changes(self):
         from_rev = get_reference_branch_ref_name()
         to_rev = self.pr_info.local_rev_name
-        return get_file_changes_by_revision(from_rev, to_rev)
+        file_changes = get_file_changes_by_revision(from_rev, to_rev)
+        self.file_changes = file_changes
+
+    def validate_feature_file(self, file):
+        try:
+            logger.info('Attempting to validate changes in {file}'
+                        .format(file=file))
+            mod = import_module_from_relpath(file)
+        except UnexpectedFileChangeInPullRequestError:
+            # TODO mark failure
+            return False
+
+        features = get_contrib_features(mod)
+        return validate_features(features)
 
     def validate(self):
         # check that we are *on* this PR's branch
@@ -41,8 +63,19 @@ class PullRequestFeatureValidator:
             raise NotImplementedError(
                 'Must validate PR while on that PR\'s branch')
 
-        file_changes = self.get_file_changes()
-        return validate_feature_file_list(file_changes)
+        # collect file changes
+        self.get_file_changes()
+
+        # collect features
+        # TODO
+
+        overall_result = True
+        for file in self.file_changes:
+            result = self.validate_feature_file(file)
+            if result is False:
+                overall_result = False
+
+        return overall_result
 
 
 def subsample_data_for_validation(X_df_tr, y_df_tr):
@@ -56,10 +89,10 @@ def validate_features(features):
     X_df_tr, y_df_tr = subsample_data_for_validation(X_df_tr, y_df_tr)
 
     # validate
-    validator = FeatureValidator(X_df_tr, y_df_tr)
+    feature_validator = FeatureValidator(X_df_tr, y_df_tr)
     overall_result = True
     for feature in features:
-        result, failures = validator.validate(feature)
+        result, failures = feature_validator.validate(feature)
         if result is True:
             logger.info('Feature is valid: {feature}'.format(feature=feature))
         else:
@@ -72,28 +105,7 @@ def validate_features(features):
     return overall_result
 
 
-def validate_feature_file(file):
-    try:
-        logger.info('Attempting to validate changes in {file}'
-                    .format(file=file))
-        mod = import_module_from_relpath(file)
-    except UnexpectedFileChangeInPullRequestError:
-        # TODO mark failure
-        return False
-
-    features = get_contrib_features(mod)
-    return validate_features(features)
-
-
-def validate_feature_file_list(file_list):
-    overall_result = True
-    for file in file_list:
-        result = validate_feature_file(file)
-        if result is False:
-            overall_result = False
-
-    return overall_result
-
+# for utils
 
 def get_file_changes_by_revision(from_revision, to_revision):
     '''Get file changes between two revisions
