@@ -14,12 +14,16 @@ from dengue_prediction.util import replaceext, spliceext
 logger = logging.getLogger(__name__)
 
 
+def make_mapper_from_features(features):
+    return sklearn_pandas.DataFrameMapper([
+        t.as_input_transformer_tuple() for t in features
+    ], input_df=True)
+
+
 def build_features(X_df):
     logger.info('Building features...')
-    feature_transformations = get_feature_transformations()
-    mapper = sklearn_pandas.DataFrameMapper([
-        t.as_sklearn_pandas_tuple() for t in feature_transformations
-    ], input_df=True)
+    features = get_feature_transformations()
+    mapper = make_mapper_from_features(features)
     X = mapper.fit_transform(X_df)
     logger.info('Building features...DONE')
     return X, mapper

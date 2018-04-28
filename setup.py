@@ -14,9 +14,10 @@ with open('HISTORY.md') as history_file:
 requirements = [
     'btb',
     'category_encoders',
-    'fhub_core>=0.2.2',
+    'fhub_core>=0.2.4',
     'fhub_transformers>=0.2.4',
     'funcy',
+    'gitpython',
     'numpy',
     'pandas;python_version>="3.5"',  # hack
     'pandas<0.21;python_version<"3.5"',  # hack
@@ -50,7 +51,8 @@ setup(
     author="Micah Smith",
     author_email='micahjsmith@gmail.com',
     url='https://github.com/micahjsmith/dengue_prediction',
-    packages=find_packages(include=['dengue_prediction']),
+    packages=find_packages(
+        include=['dengue_prediction', 'dengue_prediction.*']),
     include_package_data=True,
     install_requires=requirements,
     license="MIT license",

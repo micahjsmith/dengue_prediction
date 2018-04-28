@@ -1,5 +1,4 @@
 import sklearn.preprocessing
-
 from fhub_core.feature import Feature
 from fhub_transformers.missing import LagImputer
 
