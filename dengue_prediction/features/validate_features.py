@@ -64,6 +64,13 @@ def validate_feature_file_list(file_list):
     return overall_result
 
 def validate_by_pr_num(pr_num):
+    # check that we are *on* this PR, otherwise not implemented
+    pr_info = PullRequestInfo(pr_num)
+    expected_branch = pr_info.local_rev_name
+    current_branch = get_current_ref_path()
+    if not expected_branch == current_branch:
+        raise NotImplementedError('Must validate PR while on that branch')
+
     file_changes = get_file_changes_by_pr_num(pr_num)
     return validate_feature_file_list(file_changes)
 
@@ -106,6 +113,11 @@ def get_reference_branch_ref_name():
     config = load_config()
     reference_branch = config['problem']['reference_branch']
     return reference_branch
+
+
+def get_current_ref_path():
+    repo = load_repo()
+    return repo.head.ref.path
 
 
 class PullRequestInfo:
