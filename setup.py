@@ -14,7 +14,7 @@ with open('HISTORY.md') as history_file:
 requirements = [
     'baytune==0.1.1',
     'category_encoders',
-    'fhub_core>=0.3.2',
+    'fhub_core>=0.3.3',
     'fhub_transformers>=0.2.4',
     'funcy',
     'gitpython',
