@@ -16,5 +16,6 @@ script:
   - |
     if [ "${TRAVIS_PULL_REQUEST}" != "false" ];
     then
-        "${TRAVIS_BUILD_DIR}/scripts/validate_pr.py"
+        python -m dengue_prediction.data.sync_data download
+        python scripts/validate_pr.py
     fi
