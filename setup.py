@@ -12,7 +12,7 @@ with open('HISTORY.md') as history_file:
     history = history_file.read()
 
 requirements = [
-    'baytune==0.1.1',
+    'btb',
     'category_encoders',
     'fhub_core>=0.3.3',
     'fhub_transformers>=0.2.4',
@@ -38,6 +38,10 @@ test_requirements = [
 extras_require = {
     #'btb': ['btb']
 }
+
+dependency_links= [
+    'git+https://github.com/micahjsmith/BTB.git@48db0da94a28492220ca666de80e193c50d756f6#egg=btb-0.2.0',
+]
 
 setup(
     name='dengue_prediction',
