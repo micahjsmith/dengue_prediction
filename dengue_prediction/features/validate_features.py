@@ -87,7 +87,7 @@ class PullRequestFeatureValidator:
             # TODO
             # return modification_type == 'A'
             return True
-            
+
         is_admissible = funcy.all_fn(
             within_contrib_subdirectory, is_appropriate_filetype,
             is_appropriate_modification_type)
@@ -126,6 +126,29 @@ class PullRequestFeatureValidator:
 
         logger.info('Collected {} features'.format(len(self.features)))
 
+    def validate_features(self, features):
+        # get small subset
+        X_df_tr, y_df_tr = load_data()
+        X_df_tr, y_df_tr = subsample_data_for_validation(X_df_tr, y_df_tr)
+
+        # validate
+        feature_validator = FeatureValidator(X_df_tr, y_df_tr)
+        overall_result = True
+        for feature in features:
+            result, failures = feature_validator.validate(feature)
+            if result is True:
+                logger.info(
+                    'Feature is valid: {feature}'.format(feature=feature))
+            else:
+                logger.info(
+                    'Feature is NOT valid: {feature}'.format(feature=feature))
+                logger.debug(
+                    'Failures in validation: {failures}'
+                    .format(failures=failures))
+                overall_result = False
+
+        return overall_result
+
     def validate(self):
         # check that we are *on* this PR's branch
         expected_ref = self.pr_info.local_rev_name
@@ -140,40 +163,14 @@ class PullRequestFeatureValidator:
         self.collect_features()
 
         # validate
-        overall_result = True
-        for feature in self.features:
-            result = validate_features([feature])
-            if result is False:
-                overall_result = False
+        result = self.validate_features(self.features)
 
-        return overall_result
+        return result
 
 
 def subsample_data_for_validation(X_df_tr, y_df_tr):
     # TODO
     return X_df_tr, y_df_tr
-
-
-def validate_features(features):
-    # get small subset
-    X_df_tr, y_df_tr = load_data()
-    X_df_tr, y_df_tr = subsample_data_for_validation(X_df_tr, y_df_tr)
-
-    # validate
-    feature_validator = FeatureValidator(X_df_tr, y_df_tr)
-    overall_result = True
-    for feature in features:
-        result, failures = feature_validator.validate(feature)
-        if result is True:
-            logger.info('Feature is valid: {feature}'.format(feature=feature))
-        else:
-            logger.info('Feature is NOT valid: {feature}'
-                        .format(feature=feature))
-            logger.debug('Failures in validation: {failures}'
-                         .format(failures=failures))
-            overall_result = False
-
-    return overall_result
 
 
 # for utils
