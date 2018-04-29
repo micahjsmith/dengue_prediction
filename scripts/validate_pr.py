@@ -4,11 +4,10 @@ import logging
 import sys
 
 import click
+from fhub_core.validation import PullRequestFeatureValidator
+from fhub_core.travis import get_travis_pr_num
 
-import dengue_prediction.features.travis as travis
 from dengue_prediction.config import cg, load_repo
-from dengue_prediction.features.validate_features import (
-    PullRequestFeatureValidator, get_comparison_ref_name )
 from dengue_prediction.data.make_dataset import load_data
 
 logger = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ def main(pr_num=None):
 
     if pr_num is None:
         logger.info('No PR provided. Trying to detect PR from Travis ENV.')
-        pr_num = travis.get_pr_num()
+        pr_num = get_travis_pr_num()
         if pr_num is None:
             logger.info('Could not detect PR. Exiting...')
             return RETVAL_NOT_PR
@@ -33,11 +32,11 @@ def main(pr_num=None):
     logger.info('Validating PR {}...'.format(pr_num))
 
     repo = load_repo()
-    comparison_ref = get_comparison_ref_name()
+    comparison_ref = cg('contrib', 'comparison_ref')
     contrib_module_path = cg('contrib', 'module_path')
     X_df, y_df = load_data()
     validator = PullRequestFeatureValidator(
-        repo, pr_num, comparison_ref, contrib_module_path, X_df, y_df)
+        pr_num, repo, comparison_ref, contrib_module_path, X_df, y_df)
     result = validator.validate()
 
     if result is True:
@@ -46,7 +45,7 @@ def main(pr_num=None):
         return RETVAL_INVALID
 
 if __name__ == '__main__':
-    _logger = logging.getLogger('dengue_prediction')
+    _logger = logging.getLogger('fhub_core.validation')
     _logger.setLevel(logging.DEBUG)
     handler = logging.StreamHandler()
     formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')

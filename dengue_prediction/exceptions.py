@@ -8,7 +8,3 @@ class ConfigurationError(Error):
 
 class GitError(Error):
     pass
-
-
-class UnexpectedFileChangeInPullRequestError(Error):
-    pass

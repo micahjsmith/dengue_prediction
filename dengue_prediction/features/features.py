@@ -5,13 +5,12 @@ import numpy as np
 import sklearn.decomposition
 import sklearn.preprocessing
 from fhub_core.feature import Feature
+from fhub_core.util.modutil import import_module_from_modname
 from fhub_transformers import IdentityTransformer, SimpleFunctionTransformer
 from fhub_transformers.missing import LagImputer, NullFiller, NullIndicator
 from fhub_transformers.ts import SingleLagger
 
 from dengue_prediction.config import cg
-from dengue_prediction.features.validate_features import (
-    import_module_from_modname)
 
 logger = logging.getLogger(__name__)
 
