@@ -9,6 +9,7 @@ problem:
     classification_type:
 
 data:
+  s3_bucket: mit-dai-micahs-misc
   train: data/raw
   entities_table_name: dengue_features
   target_table_name: dengue_labels
