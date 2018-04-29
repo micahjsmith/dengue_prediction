@@ -8,7 +8,7 @@ import click
 import dengue_prediction.features.travis as travis
 from dengue_prediction.config import cg, load_repo
 from dengue_prediction.features.validate_features import (
-    PullRequestFeatureValidator, comparison_ref_name )
+    PullRequestFeatureValidator, get_comparison_ref_name )
 from dengue_prediction.data.make_dataset import load_data
 
 logger = logging.getLogger(__name__)
