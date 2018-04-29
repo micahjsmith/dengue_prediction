@@ -5,7 +5,7 @@ import sys
 
 import click
 from fhub_core.validation import PullRequestFeatureValidator
-from fhub_core.travis import get_travis_pr_num
+from fhub_core.util.travis import get_travis_pr_num
 
 from dengue_prediction.config import cg, load_repo
 from dengue_prediction.data.make_dataset import load_data
