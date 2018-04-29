@@ -8,7 +8,6 @@ from fhub_core.feature import FeatureValidator
 
 from dengue_prediction import PROJECT_ROOT
 from dengue_prediction.config import cg
-from dengue_prediction.data.make_dataset import load_data
 from dengue_prediction.exceptions import UnexpectedFileChangeInPullRequestError
 
 logger = logging.getLogger(__name__)
@@ -24,7 +23,8 @@ class HeadInfo:
 
 
 class PullRequestFeatureValidator:
-    def __init__(self, repo, pr_num, comparison_ref, contrib_module_path):
+    def __init__(self, repo, pr_num, comparison_ref, contrib_module_path,
+                 X_df, y_df):
         '''Validate the features introduced in a proposed pull request
 
         Args:
@@ -34,6 +34,8 @@ class PullRequestFeatureValidator:
         self.pr_num = pr_num
         self.comparison_ref = comparison_ref
         self.contrib_module_path = contrib_module_path
+        self.X_df = X_df
+        self.y_df = y_df
 
         self.pr_info = PullRequestInfo(self.pr_num)
         self.head_info = HeadInfo(self.repo)
@@ -126,12 +128,11 @@ class PullRequestFeatureValidator:
         logger.info('Collected {} features'.format(len(self.features)))
 
     def validate_features(self, features):
-        # get small subset
-        X_df_tr, y_df_tr = load_data()
-        X_df_tr, y_df_tr = subsample_data_for_validation(X_df_tr, y_df_tr)
+        # get small subset?
+        X_df, y_df = subsample_data_for_validation(self.X_df, self.y_df)
 
         # validate
-        feature_validator = FeatureValidator(X_df_tr, y_df_tr)
+        feature_validator = FeatureValidator(X_df, y_df)
         overall_result = True
         for feature in features:
             result, failures = feature_validator.validate(feature)
