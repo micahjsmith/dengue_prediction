@@ -5,6 +5,7 @@ import pandas as pd
 from dotenv import find_dotenv, load_dotenv
 
 import dengue_prediction.config
+from dengue_prediction.config import cg
 
 
 def load_data(input_dir=None):
@@ -34,9 +35,7 @@ def _load_target_table(input_dir):
 
 
 def _load_table_type(table_type, input_dir):
-    config = dengue_prediction.config.load_config()
-    return _load_named_table(
-        input_dir, config['problem']['data'][table_type])
+    return _load_named_table(input_dir, cg('data', table_type))
 
 
 def _load_named_table(input_dir, table_name):

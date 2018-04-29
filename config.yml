@@ -7,12 +7,17 @@ problem:
     # - function name, such as dengue_prediction.models.scoring.scorer using make_scorer
     scorer: neg_mean_absolute_error
     classification_type:
-  data:
-    train: 'data/raw'
-    entities_table_name: dengue_features
-    target_table_name: dengue_labels
-  reference_remote: origin
-  reference_branch: master
+
+data:
+  train: data/raw
+  entities_table_name: dengue_features
+  target_table_name: dengue_labels
+
+contrib:
+  module_name: dengue_prediction.features.contrib
+  module_path: dengue_prediction/features/contrib
+  comparison_remote: origin
+  comparison_ref: master
 
 tables:
   -

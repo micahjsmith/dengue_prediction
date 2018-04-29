@@ -1,17 +1,24 @@
 import logging
 
+import fhub_core.contrib
 import numpy as np
 import sklearn.decomposition
 import sklearn.preprocessing
-from fhub_core.contrib import get_contrib_features
 from fhub_core.feature import Feature
+from fhub_core.util.modutil import import_module_from_modname
 from fhub_transformers import IdentityTransformer, SimpleFunctionTransformer
 from fhub_transformers.missing import LagImputer, NullFiller, NullIndicator
 from fhub_transformers.ts import SingleLagger
 
-import dengue_prediction.features.contrib
+from dengue_prediction.config import cg
 
 logger = logging.getLogger(__name__)
+
+
+def get_contrib_features():
+    modname = cg('contrib', 'module_name')
+    mod = import_module_from_modname(modname)
+    return fhub_core.contrib.get_contrib_features(mod)
 
 
 def get_feature_transformations():
@@ -117,7 +124,8 @@ def get_feature_transformations():
     )
 
     # add contributed features
-    features.extend(get_contrib_features(dengue_prediction.features.contrib))
+    contrib_features = get_contrib_features()
+    features.extend(contrib_features)
 
     return features
 

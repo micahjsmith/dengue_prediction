@@ -4,7 +4,7 @@ import os
 import click
 import sklearn_pandas
 
-from dengue_prediction.config import get_table_abspath, load_config
+from dengue_prediction.config import cg, get_table_abspath
 from dengue_prediction.data.make_dataset import load_data
 from dengue_prediction.features.features import (
     get_feature_transformations, get_target_transformations)
@@ -14,16 +14,16 @@ from dengue_prediction.util import replaceext, spliceext
 logger = logging.getLogger(__name__)
 
 
-def make_mapper_from_features(features):
+def make_mapper_from_transformations(transformations):
     return sklearn_pandas.DataFrameMapper([
-        t.as_input_transformer_tuple() for t in features
+        t.as_input_transformer_tuple() for t in transformations
     ], input_df=True)
 
 
 def build_features(X_df):
     logger.info('Building features...')
     features = get_feature_transformations()
-    mapper = make_mapper_from_features(features)
+    mapper = make_mapper_from_transformations(features)
     X = mapper.fit_transform(X_df)
     logger.info('Building features...DONE')
     return X, mapper
@@ -32,9 +32,7 @@ def build_features(X_df):
 def build_target(y_df):
     logger.info('Building target...')
     target_transformations = get_target_transformations()
-    mapper = sklearn_pandas.DataFrameMapper([
-        t.as_sklearn_pandas_tuple() for t in target_transformations
-    ])
+    mapper = make_mapper_from_transformations(target_transformations)
     y = mapper.fit_transform(y_df)
     logger.info('Building target...DONE')
     return y, mapper
@@ -75,13 +73,12 @@ def save_features(X, y, output_dir):
         fn = replaceext(fn, '.' + filetype)
         return fn
 
-    config = load_config()
-    entities_table_name = config['problem']['data']['entities_table_name']
+    entities_table_name = cg('data', 'entities_table_name')
     fn_X = namer(entities_table_name)
     write_tabular(X, fn_X)
     logger.info('Saved featurized entities to {}'.format(fn_X))
 
-    target_table_name = config['problem']['data']['target_table_name']
+    target_table_name = cg('data', 'target_table_name')
     fn_y = namer(target_table_name)
     write_tabular(y, fn_y)
     logger.info('Saved transformed target to {}'.format(fn_y))

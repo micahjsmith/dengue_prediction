@@ -1,4 +1,4 @@
-.PHONY: clean data lint requirements sync_data_to_s3 sync_data_from_s3
+.PHONY: clean data test lint fix-lint requirements sync_data_to_s3 sync_data_from_s3
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -34,9 +34,13 @@ clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
 
+## Test using pytest
+test:
+	pytest -v dengue_prediction
+
 ## Lint using flake8
 lint:
-	flake8 dengue_prediction 
+	flake8 dengue_prediction
 	isort -c --recursive dengue_prediction
 
 ## Fix lint issues using autoflake, autopep8, and isort

@@ -33,14 +33,23 @@ def load_config():
         raise RuntimeError
 
 
+def cg(*args):
+    '''Get nested path from config
+
+    Returns:
+        Result, or None if path not found
+    '''
+    config = load_config()
+    return funcy.get_in(config, args, default=None)
+
+
 def load_repo():
     repo = git.Repo(str(PROJECT_PATHS['root']))
     return repo
 
 
 def get_table_config(table_name):
-    config = load_config()
-    result = funcy.select(lambda d: d['name'] == table_name, config['tables'])
+    result = funcy.select(lambda d: d['name'] == table_name, cg('tables'))
     if len(result) == 1:
         return result[0]
     else:
@@ -49,8 +58,8 @@ def get_table_config(table_name):
 
 
 def get_train_dir():
-    config = load_config()
-    return PROJECT_PATHS['root'].joinpath(config['problem']['data']['train'])
+    load_config()
+    return PROJECT_PATHS['root'].joinpath(cg('data', 'train'))
 
 
 def get_table_abspath(containing_dir, table_name):
