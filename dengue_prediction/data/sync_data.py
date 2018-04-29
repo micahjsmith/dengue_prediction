@@ -27,7 +27,8 @@ def make_aws_command(src, dst, profile=None):
 
 def run_command(cmd):
     output = subprocess.check_output(cmd, universal_newlines=True)
-    logger.info(output)
+    if output:
+        logger.info(output)
     return output
 
 
