@@ -10,12 +10,11 @@ script:
   - |
     if [ "${TRAVIS_PULL_REQUEST}" = "false" ];
     then
-        tox
+        scripts/travis/test.sh
     fi
   # if it *is* a PR
   - |
     if [ "${TRAVIS_PULL_REQUEST}" != "false" ];
     then
-        python -m dengue_prediction.data.sync_data download
-        python scripts/validate_pr.py
+        scripts/travis/test_pr.sh
     fi
