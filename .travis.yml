@@ -1,10 +1,10 @@
-sudo: false
 language: python
 python:
   - 3.6
   - 3.5
   - 3.4
-install: pip install tox-travis
+install:
+  - pip install tox-travis
 script:
   # if it is *not* a PR
   - |
@@ -16,7 +16,5 @@ script:
   - |
     if [ "${TRAVIS_PULL_REQUEST}" != "false" ];
     then
-        tox
-        echo "In pull request ${TRAVIS_PULL_REQUEST}"
-        # TODO something else
+        "${TRAVIS_BUILD_DIR}/scripts/validate_pr.py"
     fi
