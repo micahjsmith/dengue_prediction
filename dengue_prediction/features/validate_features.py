@@ -7,7 +7,7 @@ from fhub_core.contrib import get_contrib_features
 from fhub_core.feature import FeatureValidator
 
 from dengue_prediction import PROJECT_ROOT
-from dengue_prediction.config import cg, load_repo
+from dengue_prediction.config import cg
 from dengue_prediction.data.make_dataset import load_data
 from dengue_prediction.exceptions import UnexpectedFileChangeInPullRequestError
 
@@ -15,41 +15,42 @@ logger = logging.getLogger(__name__)
 
 
 class HeadInfo:
-    def __init__(self):
-        repo = load_repo()
+    def __init__(self, repo):
         self.head = repo.head
 
     @property
     def path(self):
-
         return self.head.ref.path
 
 
 class PullRequestFeatureValidator:
-    def __init__(self, pr_num):
+    def __init__(self, repo, pr_num, comparison_ref, contrib_module_path):
         '''Validate the features introduced in a proposed pull request
 
         Args:
             pr_num (str): Pull request number
         '''
+        self.repo = repo
         self.pr_num = pr_num
+        self.comparison_ref = comparison_ref
+        self.contrib_module_path = contrib_module_path
+
         self.pr_info = PullRequestInfo(self.pr_num)
-        self.head_info = HeadInfo()
+        self.head_info = HeadInfo(self.repo)
 
         # may be set by other methods
         self.file_changes = None
         self.file_changes_admissible = None
         self.file_changes_inadmissible = None
-
         self.features = None
 
     def collect_file_changes(self):
         logger.info('Collecting file changes...')
 
-        from_rev = get_reference_branch_ref_name()
+        from_rev = self.comparison_ref
         to_rev = self.pr_info.local_rev_name
-        file_changes = get_file_changes_by_revision(from_rev, to_rev)
-        self.file_changes = file_changes
+        self.file_changes = get_file_changes_by_revision(
+            self.repo, from_rev, to_rev)
 
         # log results
         for i, file in enumerate(self.file_changes):
@@ -75,9 +76,7 @@ class PullRequestFeatureValidator:
         # - otherwise (wrong directory, wrong filetype, wrong modification
         #   type)
         def within_contrib_subdirectory(file):
-            contrib_modname = cg('contrib', 'module_name')
-            contrib_relpath = modname_to_relpath(
-                contrib_modname, add_init=False)
+            contrib_relpath = self.contrib_module_path
             return pathlib.Path(contrib_relpath) in pathlib.Path(file).parents
 
         def is_appropriate_filetype(file):
@@ -175,7 +174,7 @@ def subsample_data_for_validation(X_df_tr, y_df_tr):
 
 # for utils
 
-def get_file_changes_by_revision(from_revision, to_revision):
+def get_file_changes_by_revision(repo, from_revision, to_revision):
     '''Get file changes between two revisions
 
     For details on specifying revisions, see
@@ -184,19 +183,17 @@ def get_file_changes_by_revision(from_revision, to_revision):
     '''
     diff_str = '{from_revision}..{to_revision}'.format(
         from_revision=from_revision, to_revision=to_revision)
-    return get_file_changes_by_diff_str(diff_str)
+    return get_file_changes_by_diff_str(repo, diff_str)
 
 
-def get_file_changes_by_diff_str(diff_str):
-    repo = load_repo()
+def get_file_changes_by_diff_str(repo, diff_str):
     return repo.git.diff(diff_str, name_only=True).split('\n')
 
 
 # utils
 
-def get_reference_branch_ref_name():
-    reference_branch = cg('contrib', 'reference_branch')
-    return reference_branch
+def get_comparison_ref_name():
+    return cg('contrib', 'comparison_ref')
 
 
 class PullRequestInfo:

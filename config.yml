@@ -15,8 +15,9 @@ data:
 
 contrib:
   module_name: dengue_prediction.features.contrib
-  reference_remote: origin
-  reference_branch: master
+  module_path: dengue_prediction/features/contrib
+  comparison_remote: origin
+  comparison_ref: master
 
 tables:
   -

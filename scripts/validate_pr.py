@@ -6,8 +6,9 @@ import sys
 import click
 
 import dengue_prediction.features.travis as travis
+from dengue_prediction.config import cg, load_repo
 from dengue_prediction.features.validate_features import (
-    PullRequestFeatureValidator )
+    PullRequestFeatureValidator, comparison_ref_name )
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,11 @@ def main(pr_num=None):
 
     logger.info('Validating PR {}...'.format(pr_num))
 
-    validator = PullRequestFeatureValidator(pr_num)
+    repo = load_repo()
+    comparison_ref = get_comparison_ref_name()
+    contrib_module_path = cg('contrib', 'module_path')
+    validator = PullRequestFeatureValidator(
+        repo, pr_num, comparison_ref, contrib_module_path)
     result = validator.validate()
 
     if result is True:
