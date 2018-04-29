@@ -12,9 +12,9 @@ with open('HISTORY.md') as history_file:
     history = history_file.read()
 
 requirements = [
-    'baytune==0.1.0',
+    'baytune==0.1.1',
     'category_encoders',
-    'fhub_core>=0.3.1',
+    'fhub_core>=0.3.2',
     'fhub_transformers>=0.2.4',
     'funcy',
     'gitpython',
