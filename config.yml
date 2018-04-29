@@ -2,9 +2,6 @@ problem:
   name: dengue_prediction
   problem_type: regression
   problem_type_details:
-    # either
-    # - sklearn string http://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
-    # - function name, such as dengue_prediction.models.scoring.scorer using make_scorer
     scorer: neg_mean_absolute_error
     classification_type:
 

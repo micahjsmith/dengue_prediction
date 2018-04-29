@@ -17,15 +17,11 @@ def get_s3_base_url():
         bucket=bucket, project_name=project_name)
 
 
-def make_aws_command(src, dst, profile=None):
+def run_aws_s3_sync(src, dst, profile=None):
     cmd = ['aws', 's3', 'sync', src, dst]
     if profile is not None:
         cmd.append('--profile')
         cmd.append(profile)
-    return cmd
-
-
-def run_command(cmd):
     output = subprocess.check_output(cmd, universal_newlines=True)
     if output:
         logger.info(output)
@@ -36,16 +32,14 @@ def upload(profile=None):
     base = get_s3_base_url()
     src = str(PROJECT_ROOT.joinpath('data', 'raw'))
     dst = base + '/data/raw'
-    cmd = make_aws_command(src, dst, profile=profile)
-    return run_command(cmd)
+    return run_aws_s3_sync(src, dst, profile=profile)
 
 
 def download(profile=None):
     base = get_s3_base_url()
     src = base + '/data/raw'
     dst = str(PROJECT_ROOT.joinpath('data', 'raw'))
-    cmd = make_aws_command(src, dst, profile=profile)
-    return run_command(cmd)
+    return run_aws_s3_sync(src, dst, profile=profile)
 
 
 @click.command()
