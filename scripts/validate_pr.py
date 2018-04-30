@@ -53,5 +53,5 @@ if __name__ == '__main__':
     #_logger.setLevel(logging.DEBUG)
     #_logger.addHandler(handler)
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     sys.exit(main())
