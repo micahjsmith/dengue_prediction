@@ -2,8 +2,8 @@
 set -e
 set -x
 
-# activate environment :(
-tox -e py36 --notest
+#
+tox --develop -e py36 --notest
 source .tox/py36/bin/activate
 which python
 python --version
