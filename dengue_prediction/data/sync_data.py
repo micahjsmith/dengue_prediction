@@ -17,15 +17,27 @@ def get_s3_base_url():
         bucket=bucket, project_name=project_name)
 
 
-def run_aws_s3_sync(src, dst, profile=None):
-    cmd = ['aws', 's3', 'sync', src, dst]
+def run_aws_s3_sync(src, dst, credentials=True, profile=None):
+    cmd = ['aws', 's3', 'sync']
+    if not credentials:
+        cmd.append('--no-sign-request')
+        region = 'us-east-1'
+        cmd.append('--region={}'.format(region))
+    cmd.append(src)
+    cmd.append(dst)
     if profile is not None:
         cmd.append('--profile')
         cmd.append(profile)
-    output = subprocess.check_output(cmd, universal_newlines=True)
-    if output:
-        logger.info(output)
-    return output
+    try:
+        output = subprocess.check_output(cmd, universal_newlines=True)
+        if output:
+            logger.info(output)
+        return output
+    except subprocess.CalledProcessError as e:
+        if 'Unable to locate credentials' in e.output:
+            if credentials:
+                return run_aws_s3_sync(
+                    src, dst, credentials=False, profile=profile)
 
 
 def upload(profile=None):
