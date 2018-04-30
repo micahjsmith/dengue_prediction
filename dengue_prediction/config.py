@@ -4,7 +4,7 @@ import funcy
 import git
 import yaml
 
-from dengue_prediction import PROJECT_PATHS
+from dengue_prediction import PROJECT_ROOT
 from dengue_prediction.exceptions import ConfigurationError
 
 
@@ -22,7 +22,7 @@ def validate_config(config, schema):
 
 
 def load_config():
-    config_fn = PROJECT_PATHS['root'] / 'config.yml'
+    config_fn = PROJECT_ROOT / 'config.yml'
     with open(str(config_fn), 'r') as f:
         config = yaml.load(f)
     schema = get_config_schema()
@@ -44,8 +44,7 @@ def cg(*args):
 
 
 def load_repo():
-    repo = git.Repo(str(PROJECT_PATHS['root']))
-    return repo
+    return git.Repo(str(PROJECT_ROOT))
 
 
 def get_table_config(table_name):
@@ -59,7 +58,7 @@ def get_table_config(table_name):
 
 def get_train_dir():
     load_config()
-    return PROJECT_PATHS['root'].joinpath(cg('data', 'train'))
+    return PROJECT_ROOT.joinpath(cg('data', 'train'))
 
 
 def get_table_abspath(containing_dir, table_name):
