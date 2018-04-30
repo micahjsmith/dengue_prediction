@@ -1,3 +1,4 @@
+import logging
 import pathlib
 
 import funcy
@@ -6,6 +7,8 @@ import yaml
 
 from dengue_prediction import PROJECT_ROOT
 from dengue_prediction.exceptions import ConfigurationError
+
+logger = logging.getLogger(__name__)
 
 
 def get_config_schema():
@@ -44,7 +47,16 @@ def cg(*args):
 
 
 def load_repo():
-    return git.Repo(str(PROJECT_ROOT))
+    try:
+        return git.Repo(str(PROJECT_ROOT))
+    except git.exc.InvalidGitRepositoryError:
+        logger.exception(
+            'Could not initialize git repository at {}'
+            .format(str(PROJECT_ROOT)))
+        files = ', '.join([str(f) for f in PROJECT_ROOT.iterdir()])
+        logger.debug(
+            'Contents of destination directory: {}'.format(files))
+        raise
 
 
 def get_table_config(table_name):
