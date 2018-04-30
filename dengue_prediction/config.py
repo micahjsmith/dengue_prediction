@@ -46,14 +46,15 @@ def cg(*args):
     return funcy.get_in(config, args, default=None)
 
 
-def load_repo():
+def load_repo(path=PROJECT_ROOT):
+    path = pathlib.Path(path)
     try:
-        return git.Repo(str(PROJECT_ROOT))
+        return git.Repo(str(path))
     except git.exc.InvalidGitRepositoryError:
         logger.exception(
             'Could not initialize git repository at {}'
-            .format(str(PROJECT_ROOT)))
-        files = ', '.join([str(f) for f in PROJECT_ROOT.iterdir()])
+            .format(str(path)))
+        files = ', '.join([str(f) for f in path.iterdir()])
         logger.debug(
             'Contents of destination directory: {}'.format(files))
         raise
