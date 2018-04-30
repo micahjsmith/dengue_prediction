@@ -13,4 +13,3 @@ def my_function(data):
 transformer = [
     SimpleFunctionTransformer(my_function)
 ]
-feature = Feature(input=input, transformer=transformer)
