@@ -2,9 +2,10 @@
 set -e
 set -x
 
-#
-tox --develop -e py36 --notest
-source .tox/py36/bin/activate
+# setup environment
+tox --develop --notest
+tox_py_env=$(python -c 'from tox_travis.envlist import guess_python_env;print(guess_python_env())')
+source ".tox/${tox_py_env}/bin/activate"
 which python
 python --version
 
