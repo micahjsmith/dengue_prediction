@@ -43,14 +43,15 @@ def main(pr_num=None):
         return RETVAL_INVALID
 
 if __name__ == '__main__':
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+    #handler = logging.StreamHandler()
+    #formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+    #
+    #logger.setLevel(logging.DEBUG)
+    #logger.addHandler(handler)
+    #
+    #_logger = logging.getLogger('fhub_core.validation')
+    #_logger.setLevel(logging.DEBUG)
+    #_logger.addHandler(handler)
 
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-
-    _logger = logging.getLogger('fhub_core.validation')
-    _logger.setLevel(logging.DEBUG)
-    _logger.addHandler(handler)
-
+    logging.basicConfig(level=logging.DEBUG)
     sys.exit(main())
