@@ -7,6 +7,7 @@ problem:
 
 data:
   s3_bucket: mit-dai-micahs-misc
+  s3_bucket_region: us-east-1
   train: data/raw
   entities_table_name: dengue_features
   target_table_name: dengue_labels

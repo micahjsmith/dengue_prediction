@@ -55,7 +55,7 @@ sync_data_to_s3:
 
 ## Download Data from S3
 sync_data_from_s3:
-	$(PYTHON_INTERPRETER) -m dengue_prediction.data.sync_data upload
+	$(PYTHON_INTERPRETER) -m dengue_prediction.data.sync_data download
 
 ## Set up python interpreter environment
 create_environment:
