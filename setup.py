@@ -12,15 +12,20 @@ with open('HISTORY.md') as history_file:
     history = history_file.read()
 
 requirements = [
+    'Click',
+    'awscli',
     'btb',
     'category_encoders',
     'fhub_core>=0.3.3',
     'fhub_transformers>=0.2.4',
     'funcy',
     'gitpython',
+    'h5py',
     'numpy',
     'pandas;python_version>="3.5"',  # hack
     'pandas<0.21;python_version<"3.5"',  # hack
+    'python-dotenv>=0.5.1',
+    'pyyaml',
     'scikit_learn',
     'sklearn_pandas',
 ]
@@ -55,6 +60,7 @@ setup(
         include=['dengue_prediction', 'dengue_prediction.*']),
     include_package_data=True,
     install_requires=requirements,
+    dependency_links=dependency_links,
     license="MIT license",
     zip_safe=False,
     keywords='dengue_prediction',

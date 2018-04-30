@@ -6,10 +6,12 @@ fhub_core>=0.3.3
 fhub_transformers>=0.2.4
 funcy
 gitpython
+h5py
 numpy
 pandas; python_version>="3.5"
 pandas<0.21; python_version<"3.5"
 python-dotenv>=0.5.1
+pyyaml
 scikit_learn
 sklearn_pandas
 git+https://github.com/micahjsmith/BTB.git@48db0da94a28492220ca666de80e193c50d756f6#egg=btb-0.2.0
