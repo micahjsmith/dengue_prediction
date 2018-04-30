@@ -48,4 +48,5 @@ if __name__ == '__main__':
     handler = logging.StreamHandler()
     formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
     _logger.addHandler(handler)
+    logger.addHandler(handler)
     sys.exit(main())

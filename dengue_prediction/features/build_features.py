@@ -21,6 +21,16 @@ def make_mapper_from_transformations(transformations):
 
 
 def build_features(X_df):
+    '''Build features for and mapper for features
+
+    Args:
+        X_df (pd.DataFrame): entities table, with observations on rows and
+            variables on columns
+
+    Returns:
+        (X_df_tr, mapper_X): Tuple of featurized entities ("feature matrix")
+            and DataFrameMapper
+    '''
     logger.info('Building features...')
     features = get_feature_transformations()
     mapper = make_mapper_from_transformations(features)
@@ -30,6 +40,16 @@ def build_features(X_df):
 
 
 def build_target(y_df):
+    '''Build target and mapper for target
+
+    Args:
+        y_df (pd.DataFrame): target table, with observations on rows and
+            raw target in only column
+
+    Returns:
+        (y_df_tr, mapper_y): Tuple of featurized target ("target")
+            and DataFrameMapper
+    '''
     logger.info('Building target...')
     target_transformations = get_target_transformations()
     mapper = make_mapper_from_transformations(target_transformations)
