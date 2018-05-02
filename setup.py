@@ -16,7 +16,7 @@ requirements = [
     'awscli',
     'btb',
     'category_encoders',
-    'fhub_core>=0.3.5',
+    'fhub_core>=0.3.6',
     'fhub_transformers>=0.2.4',
     'funcy',
     'gitpython',
