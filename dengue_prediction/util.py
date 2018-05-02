@@ -8,20 +8,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 RANDOM_STATE = 1754
 
 
-def asarray2d(a):
-    arr = np.asarray(a)
-    if arr.ndim == 1:
-        arr = arr.reshape(-1, 1)
-    return arr
-
-
-def get_arr_desc(arr):
-    desc = '{typ} {shp}'
-    typ = type(arr)
-    shp = getattr(arr, 'shape', None)
-    return desc.format(typ=typ, shp=shp)
-
-
 class InputLogger(BaseEstimator, TransformerMixin):
     def __init__(self, name=None, level='debug'):
         initialized = False
@@ -66,36 +52,6 @@ class InputLogger(BaseEstimator, TransformerMixin):
 def indent(text, n=4):
     _indent = ' ' * n
     return '\n'.join([_indent + line for line in text.split('\n')])
-
-
-class LoggingContext(object):
-    '''
-    Logging context manager
-
-    Source: <https://docs.python.org/3/howto/logging-cookbook.html #using-a-context-manager-for-selective-logging>  # noqa
-    '''
-
-    def __init__(self, logger, level=None, handler=None, close=True):
-        self.logger = logger
-        self.level = level
-        self.handler = handler
-        self.close = close
-
-    def __enter__(self):
-        if self.level is not None:
-            self.old_level = self.logger.level
-            self.logger.setLevel(self.level)
-        if self.handler:
-            self.logger.addHandler(self.handler)
-
-    def __exit__(self, et, ev, tb):
-        if self.level is not None:
-            self.logger.setLevel(self.old_level)
-        if self.handler:
-            self.logger.removeHandler(self.handler)
-        if self.handler and self.close:
-            self.handler.close()
-        # implicit return of None => don't swallow exceptions
 
 
 def str_to_enum_member(s, E):
